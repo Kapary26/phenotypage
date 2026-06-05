@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v13 - Ergonomie terrain</title>
+    <title>Phénotypage v17 - Ergonomie liste</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -67,7 +67,7 @@
         .home-actions { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 320px; }
         .btn-large { padding: 18px; font-size: 18px; width: 100%; border-radius: 14px; }
 
-        .list-top-area { position: -webkit-sticky; position: sticky; top: -15px; background-color: var(--bg-app); z-index: 50; padding: 15px 0 5px 0; margin-top: -15px; }
+        .list-top-area { position: -webkit-sticky; position: sticky; top: -15px; background-color: var(--bg-app); z-index: 50; padding: 15px 0 2px 0; margin-top: -15px; }
         #view-form header { position: -webkit-sticky; position: sticky; top: -15px; background-color: var(--bg-app); z-index: 50; padding: 15px 0 10px 0; margin-top: -15px; border-bottom: 2px solid var(--border-color); }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px 0; }
@@ -84,7 +84,7 @@
 
         h3 { color: var(--text-main); margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 
-        .progress-wrapper { margin-bottom: 20px; }
+        .progress-wrapper { margin-bottom: 8px; }
         .progress-text { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-align: right; }
         .progress-container { width: 100%; background-color: #e5e5ea; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 15px; }
         .progress-bar { height: 100%; background-color: var(--success); width: 0%; transition: width 0.4s ease; }
@@ -227,10 +227,15 @@
         .progress-container {
             height: 7px;
             border-radius: 999px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .progress-bar { border-radius: 999px; }
+
+        .progress-wrapper.compact-balanced,
+        #progress-wrapper {
+            padding-bottom: 0;
+        }
 
         .search-input {
             border-radius: 16px;
@@ -241,7 +246,7 @@
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            padding: 12px 2px 6px 2px;
+            padding: 8px 2px 8px 2px;
             margin-top: 8px;
             align-items: center;
             -webkit-overflow-scrolling: touch;
@@ -380,6 +385,189 @@
             transform: translateX(-50%) translateY(0);
         }
 
+
+        /* ===== Onglet statistiques v16 ===== */
+        .btn-stats { background-color: var(--primary); }
+
+        .stats-header {
+            position: -webkit-sticky;
+            position: sticky;
+            top: -15px;
+            background-color: var(--bg-app);
+            z-index: 50;
+            padding: 15px 0 10px 0;
+            margin-top: -15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-tile {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .stat-tile.full { grid-column: 1 / -1; }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 850;
+            letter-spacing: -0.6px;
+            color: var(--text-main);
+            line-height: 1.05;
+        }
+
+        .stat-sub {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 650;
+            margin-top: 6px;
+            line-height: 1.35;
+        }
+
+        .stats-section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stats-section-title h3 {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .stats-note {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .decision-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .decision-row:last-child { border-bottom: none; }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 78px 1fr 44px;
+            gap: 9px;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 13px;
+            font-weight: 750;
+            color: var(--text-main);
+        }
+
+        .mini-bar {
+            height: 9px;
+            border-radius: 999px;
+            background: var(--border-color);
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--primary);
+            width: 0%;
+        }
+
+        .cross-stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.035);
+            border: 1px solid var(--border-color);
+        }
+
+        .cross-stat-title {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.55px;
+            line-height: 1.25;
+            margin-bottom: 10px;
+        }
+
+        .cross-stat-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .metric-pill {
+            background: var(--bg-app);
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 750;
+            color: var(--text-main);
+        }
+
+        .metric-pill span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            margin-bottom: 3px;
+        }
+
+        .stats-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 750;
+            padding: 36px 14px;
+        }
+
+        .alert-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .alert-item:last-child { border-bottom: none; }
+
+        @media (prefers-color-scheme: dark) {
+            .stat-tile,
+            .cross-stat-card { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
+            .metric-pill { background: rgba(118,118,128,0.18); }
+        }
+
         @media (prefers-color-scheme: dark) {
             .filter-chip { background: #1c1c1e; border-color: #38383a; color: var(--text-main); }
             .filter-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
@@ -388,7 +576,102 @@
             .status-pill.cut { background: rgba(255,159,10,0.16); border-color: rgba(255,159,10,0.30); color: var(--warning); }
         }
 
-    </style>
+    
+
+        /* ===== Ajustements ergonomiques v17 : liste plus compacte ===== */
+        #view-list .list-top-area {
+            padding: 10px 0 10px 0;
+            border-radius: 0 0 18px 18px;
+        }
+
+        #view-list .list-top-area header {
+            margin-bottom: 10px;
+            padding: 6px 0 8px 0;
+            border-radius: 0 0 16px 16px;
+        }
+
+        #view-list .list-top-area header h1 {
+            font-size: 21px;
+            line-height: 1.1;
+        }
+
+        #view-list .action-btn {
+            width: 62px;
+            height: 48px;
+            min-height: 48px;
+            border-radius: 15px;
+            font-size: 11px;
+            gap: 2px;
+            padding: 4px;
+        }
+
+        #view-list .action-btn .icon {
+            font-size: 18px;
+        }
+
+        #view-list #progress-wrapper {
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        #view-list .list-summary-row {
+            margin-bottom: 4px;
+        }
+
+        #view-list .progress-text,
+        #view-list .status-summary {
+            font-size: 11px;
+            letter-spacing: 0.35px;
+        }
+
+        #view-list .progress-container {
+            height: 6px;
+            margin-bottom: 9px;
+        }
+
+        #view-list .search-input {
+            min-height: 44px;
+            padding: 11px 14px;
+            border-radius: 15px;
+            font-size: 15px;
+        }
+
+        #view-list .filter-chip-row {
+            padding: 7px 2px 7px 2px;
+            margin-top: 7px;
+            gap: 8px;
+        }
+
+        #view-list .filter-chip {
+            min-height: 34px;
+            padding: 7px 11px;
+            font-size: 13px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.03);
+        }
+
+        #view-list li.header-croisement {
+            margin: 9px 0 7px 0;
+            padding: 9px 10px 8px 10px;
+            border-top: none !important;
+            border-bottom: 1px solid var(--soft-blue-border, var(--border-color));
+            background-color: var(--bg-app) !important;
+            line-height: 1.22;
+        }
+
+        #view-list li.header-croisement::before {
+            margin-bottom: 3px;
+            font-size: 9px;
+            letter-spacing: 1.1px;
+            color: var(--text-muted);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #view-list li.header-croisement {
+                background-color: var(--bg-app) !important;
+                border-bottom-color: rgba(10,132,255,0.45) !important;
+            }
+        }
+</style>
 </head>
 <body>
 
@@ -413,13 +696,9 @@
             <header>
                 <button id="btn-home-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Accueil</span></button>
                 <h1>Hybrides</h1>
-                <button id="btn-filter" type="button" class="action-btn btn-filtre-off">
-                    <span class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </span>
-                    <span>Filtre</span>
+                <button id="btn-stats" type="button" class="action-btn btn-stats">
+                    <span class="icon">📊</span>
+                    <span>Stats</span>
                 </button>
             </header>
 
@@ -444,6 +723,18 @@
         </div>
 
         <ul id="hybrids-list"></ul>
+    </div>
+
+    <div id="view-stats" class="view">
+        <header class="stats-header">
+            <button id="btn-stats-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Liste</span></button>
+            <h1>Statistiques</h1>
+            <button id="btn-stats-refresh" type="button" class="action-btn btn-stats"><span class="icon">↻</span><span>MAJ</span></button>
+        </header>
+
+        <div id="stats-content">
+            <div class="stats-empty">Aucune donnée à analyser pour le moment.</div>
+        </div>
     </div>
 
     <div id="view-form" class="view">
@@ -653,6 +944,234 @@
             return parts.join(' · ');
         }
 
+        function safeNumber(value) {
+            if (value === undefined || value === null || value === '' || value === 'N/A') return null;
+            const n = parseFloat(String(value).replace(',', '.'));
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function percent(n, d, decimals = 1) {
+            if (!d) return '0 %';
+            return ((n / d) * 100).toFixed(decimals).replace('.', ',') + ' %';
+        }
+
+        function mean(sum, n, decimals = 1) {
+            if (!n) return '—';
+            return (sum / n).toFixed(decimals).replace('.', ',');
+        }
+
+        function calculateStats() {
+            const stats = {
+                total: hybridesInitiaux.length,
+                done: 0,
+                pending: 0,
+                tags: 0,
+                cuts: 0,
+                photos: 0,
+                decisions: { eliminer: 0, poursuivre: 0, selectionner: 0, none: 0 },
+                charge: { 0: 0, 1: 0, 2: 0, 3: 0, known: 0, sum: 0 },
+                fente: { 0: 0, 1: 0, 2: 0, 3: 0, known: 0, sum: 0, high: 0 },
+                crosses: {}
+            };
+
+            hybridesInitiaux.forEach(h => {
+                const d = dataStore[h.id] || {};
+                const isDone = d.status === 'done';
+                const isTag = !!d.tagMissing;
+                const isCut = !!(d.treeCut || d.status === 'cut');
+                const cross = h.croisement || 'Croisement inconnu';
+
+                if (!stats.crosses[cross]) {
+                    stats.crosses[cross] = {
+                        name: cross, total: 0, done: 0, tags: 0, cuts: 0, photos: 0,
+                        decisions: { eliminer: 0, poursuivre: 0, selectionner: 0, none: 0 },
+                        charge0: 0, chargeKnown: 0, chargeSum: 0,
+                        fenteKnown: 0, fenteSum: 0, fenteHigh: 0
+                    };
+                }
+
+                const c = stats.crosses[cross];
+                c.total++;
+
+                if (isDone) {
+                    stats.done++;
+                    c.done++;
+
+                    if (d.decision === 'Eliminer') { stats.decisions.eliminer++; c.decisions.eliminer++; }
+                    else if (d.decision === 'Poursuivre') { stats.decisions.poursuivre++; c.decisions.poursuivre++; }
+                    else if (d.decision === 'Sélectionner') { stats.decisions.selectionner++; c.decisions.selectionner++; }
+                    else { stats.decisions.none++; c.decisions.none++; }
+
+                    const chargeVal = safeNumber(d.charge);
+                    if (chargeVal !== null) {
+                        const rounded = Math.round(chargeVal);
+                        stats.charge.known++;
+                        stats.charge.sum += chargeVal;
+                        c.chargeKnown++;
+                        c.chargeSum += chargeVal;
+                        if ([0,1,2,3].includes(rounded)) stats.charge[rounded]++;
+                        if (rounded === 0) c.charge0++;
+                    }
+
+                    const fenteVal = safeNumber(d.fente);
+                    if (fenteVal !== null) {
+                        const roundedF = Math.round(fenteVal);
+                        stats.fente.known++;
+                        stats.fente.sum += fenteVal;
+                        c.fenteKnown++;
+                        c.fenteSum += fenteVal;
+                        if ([0,1,2,3].includes(roundedF)) stats.fente[roundedF]++;
+                        if (fenteVal >= 2) { stats.fente.high++; c.fenteHigh++; }
+                    }
+
+                    if (photosStore[h.id]) { stats.photos++; c.photos++; }
+                }
+
+                if (isTag) { stats.tags++; c.tags++; }
+                if (isCut) { stats.cuts++; c.cuts++; }
+            });
+
+            stats.pending = stats.total - stats.done;
+            stats.crossList = Object.values(stats.crosses).map(c => {
+                const evaluated = c.done || 0;
+                c.selectionRate = evaluated ? c.decisions.selectionner / evaluated : 0;
+                c.pursueRate = evaluated ? c.decisions.poursuivre / evaluated : 0;
+                c.elimRate = evaluated ? c.decisions.eliminer / evaluated : 0;
+                c.score = evaluated ? ((3 * c.decisions.selectionner + c.decisions.poursuivre - c.decisions.eliminer) / evaluated) : -999;
+                return c;
+            });
+
+            return stats;
+        }
+
+        function barRow(label, count, total) {
+            const width = total ? Math.round((count / total) * 100) : 0;
+            return `<div class="bar-row"><div>${label}</div><div class="mini-bar"><div class="mini-bar-fill" style="width:${width}%"></div></div><div>${count}</div></div>`;
+        }
+
+        function renderCrossCard(c, index) {
+            const reliability = c.done < 5 ? 'faible recul' : (c.done < 15 ? 'recul moyen' : 'bon recul');
+            return `
+                <div class="cross-stat-card">
+                    <div class="cross-stat-title">${index ? index + '. ' : ''}${c.name}</div>
+                    <div class="cross-stat-metrics">
+                        <div class="metric-pill"><span>Évalués</span>${c.done} / ${c.total}</div>
+                        <div class="metric-pill"><span>Sélection</span>${percent(c.decisions.selectionner, c.done)}</div>
+                        <div class="metric-pill"><span>Poursuite</span>${percent(c.decisions.poursuivre, c.done)}</div>
+                        <div class="metric-pill"><span>Score</span>${c.score === -999 ? '—' : c.score.toFixed(2).replace('.', ',')}</div>
+                        <div class="metric-pill"><span>Charge moy.</span>${mean(c.chargeSum, c.chargeKnown)} / 3</div>
+                        <div class="metric-pill"><span>Fente moy.</span>${mean(c.fenteSum, c.fenteKnown)} / 3</div>
+                        <div class="metric-pill"><span>Charge 0</span>${c.chargeKnown ? percent(c.charge0, c.chargeKnown) : '—'}</div>
+                        <div class="metric-pill"><span>Fente ≥ 2</span>${c.fenteKnown ? percent(c.fenteHigh, c.fenteKnown) : '—'}</div>
+                        <div class="metric-pill"><span>Fiabilité</span>${reliability}</div>
+                        <div class="metric-pill"><span>Statuts</span>${c.tags} 🏷️ · ${c.cuts} ✂️</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStatsView() {
+            const container = document.getElementById('stats-content');
+            if (!container) return;
+
+            const s = calculateStats();
+
+            if (!s.total) {
+                container.innerHTML = '<div class="stats-empty">Aucune donnée à analyser pour le moment.</div>';
+                return;
+            }
+
+            const topCrosses = [...s.crossList]
+                .filter(c => c.done > 0)
+                .sort((a, b) => (b.selectionRate - a.selectionRate) || (b.score - a.score) || (b.done - a.done))
+                .slice(0, 5);
+
+            const watchCrosses = [...s.crossList]
+                .filter(c => c.done >= 5)
+                .sort((a, b) => {
+                    const riskA = (a.done && a.decisions.selectionner === 0 ? 1 : 0) + (a.fenteKnown ? a.fenteHigh / a.fenteKnown : 0);
+                    const riskB = (b.done && b.decisions.selectionner === 0 ? 1 : 0) + (b.fenteKnown ? b.fenteHigh / b.fenteKnown : 0);
+                    return riskB - riskA;
+                })
+                .slice(0, 4);
+
+            const allCrosses = [...s.crossList]
+                .sort((a, b) => (b.score - a.score) || (b.done - a.done) || a.name.localeCompare(b.name));
+
+            const alerts = [];
+            if (s.done < s.total) alerts.push(`${s.pending} hybrides restent à évaluer.`);
+            if (s.charge.known && s.charge[0] / s.charge.known > 0.30) alerts.push(`${percent(s.charge[0], s.charge.known)} des hybrides évalués sont à charge 0.`);
+            if (s.fente.known && s.fente.high / s.fente.known > 0.20) alerts.push(`${percent(s.fente.high, s.fente.known)} des hybrides avec fente notée ont une fente ≥ 2.`);
+            if (s.crossList.filter(c => c.done >= 5 && c.decisions.selectionner === 0).length) alerts.push(`${s.crossList.filter(c => c.done >= 5 && c.decisions.selectionner === 0).length} croisements ont au moins 5 évalués sans sélectionné.`);
+
+            container.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-tile">
+                        <div class="stat-label">Avancement</div>
+                        <div class="stat-value">${percent(s.done, s.total)}</div>
+                        <div class="stat-sub">${s.done} / ${s.total} évalués</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">Sélectionnés</div>
+                        <div class="stat-value">${s.decisions.selectionner}</div>
+                        <div class="stat-sub">${percent(s.decisions.selectionner, s.done)} des évalués</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">Charge moyenne</div>
+                        <div class="stat-value">${mean(s.charge.sum, s.charge.known)}</div>
+                        <div class="stat-sub">${s.charge.known} valeurs connues</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">Fente moyenne</div>
+                        <div class="stat-value">${mean(s.fente.sum, s.fente.known)}</div>
+                        <div class="stat-sub">${s.fente.known} valeurs connues</div>
+                    </div>
+                    <div class="stat-tile full">
+                        <div class="stat-label">Suivi terrain</div>
+                        <div class="stat-sub">${s.tags} étiquettes à refaire · ${s.cuts} arbres coupés · ${s.photos} photos enregistrées</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>⚖️ Décisions</h3><span class="stats-note">${s.done} évalués</span></div>
+                    <div class="decision-row"><span>❌ Éliminer</span><strong>${s.decisions.eliminer}</strong></div>
+                    <div class="decision-row"><span>➡️ Poursuivre</span><strong>${s.decisions.poursuivre}</strong></div>
+                    <div class="decision-row"><span>✅ Sélectionner</span><strong>${s.decisions.selectionner}</strong></div>
+                    <div class="decision-row"><span>Sans décision</span><strong>${s.decisions.none}</strong></div>
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>📍 Terrain</h3><span class="stats-note">distributions</span></div>
+                    <div class="stat-label">Charge</div>
+                    ${barRow('0', s.charge[0], s.charge.known)}
+                    ${barRow('1', s.charge[1], s.charge.known)}
+                    ${barRow('2', s.charge[2], s.charge.known)}
+                    ${barRow('3', s.charge[3], s.charge.known)}
+                    <div class="stat-label" style="margin-top:16px;">Fente pistillaire</div>
+                    ${barRow('0', s.fente[0], s.fente.known)}
+                    ${barRow('1', s.fente[1], s.fente.known)}
+                    ${barRow('2', s.fente[2], s.fente.known)}
+                    ${barRow('3', s.fente[3], s.fente.known)}
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>🏆 Top croisements</h3><span class="stats-note">par taux de sélection</span></div>
+                    ${topCrosses.length ? topCrosses.map((c, i) => renderCrossCard(c, i + 1)).join('') : '<div class="stats-empty">Aucun croisement évalué.</div>'}
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>⚠️ Points de vigilance</h3><span class="stats-note">aide à la décision</span></div>
+                    ${alerts.length ? alerts.map(a => `<div class="alert-item">${a}</div>`).join('') : '<div class="stats-empty">Aucun point critique détecté.</div>'}
+                    ${watchCrosses.length ? '<div class="stat-label" style="margin-top:16px;">Croisements à surveiller</div>' + watchCrosses.map(c => renderCrossCard(c)).join('') : ''}
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>🧬 Tous les croisements</h3><span class="stats-note">${allCrosses.length} croisements</span></div>
+                    ${allCrosses.map(c => renderCrossCard(c)).join('')}
+                </div>
+            `;
+        }
+
         function updateFilterUI() {
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.classList.toggle('active', chip.dataset.filter === filterMode);
@@ -667,8 +1186,6 @@
                 tag: 'Étiq.',
                 cut: 'Coupés'
             }[filterMode] || 'Filtre';
-            const btnFilterText = document.querySelector('#btn-filter span:last-child');
-            if (btnFilterText) btnFilterText.textContent = label;
         }
 
         function updateSliderVisuals(sliderEl, displayEl, palette) {
@@ -919,22 +1436,24 @@
 
             document.getElementById('search-input').addEventListener('input', applyFilters);
 
-            document.getElementById('btn-filter').addEventListener('click', function() {
-                const modes = ['all', 'pending', 'done', 'decision-eliminer', 'decision-poursuivre', 'decision-selectionner', 'tag', 'cut'];
-                const nextIndex = (modes.indexOf(filterMode) + 1) % modes.length;
-                filterMode = modes[nextIndex];
-                this.classList.toggle('btn-filtre-on', filterMode !== 'all');
-                this.classList.toggle('btn-filtre-off', filterMode === 'all');
-                updateFilterUI();
-                applyFilters();
+            document.getElementById('btn-stats').addEventListener('click', () => {
+                updateStatsView();
+                navigateTo('view-stats');
+            });
+
+            document.getElementById('btn-stats-back').addEventListener('click', () => {
+                navigateTo('view-list');
+                renderList();
+            });
+
+            document.getElementById('btn-stats-refresh').addEventListener('click', () => {
+                updateStatsView();
+                showToast('Statistiques mises à jour ✅');
             });
 
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.addEventListener('click', () => {
                     filterMode = chip.dataset.filter;
-                    const filterButton = document.getElementById('btn-filter');
-                    filterButton.classList.toggle('btn-filtre-on', filterMode !== 'all');
-                    filterButton.classList.toggle('btn-filtre-off', filterMode === 'all');
                     updateFilterUI();
                     applyFilters();
                 });
@@ -1264,7 +1783,10 @@
             document.getElementById('progress-bar').style.width = percentage + '%';
 
             updateFilterUI();
-            applyFilters(); 
+            applyFilters();
+            if (document.getElementById('view-stats') && document.getElementById('view-stats').classList.contains('active')) {
+                updateStatsView();
+            } 
             
             setTimeout(() => {
                 const topAreaHeight = document.getElementById('list-top-area').offsetHeight;
