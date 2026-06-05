@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phénotypage v13 - Ergonomie terrain</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #007aff; 
+            --success: #34c759; 
+            --danger: #ff3b30; 
+            --warning: #f39c12;
+            --bg-app: #f2f2f7; 
+            --bg-card: #ffffff;
+            --text-main: #1c1c1e;
+            --text-muted: #8e8e93;
+            --border-color: #e5e5ea;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #0a84ff; 
+                --success: #30d158; 
+                --danger: #ff453a; 
+                --warning: #ff9f0a;
+                --bg-app: #000000; 
+                --bg-card: #1c1c1e;
+                --text-main: #f2f2f7;
+                --text-muted: #98989d;
+                --border-color: #38383a;
+            }
+            
+            input[type="date"], input[type="number"], textarea, input[type="text"] { background-color: #2c2c2e !important; color: var(--text-main) !important; }
+            input:disabled, textarea:disabled { background-color: #1c1c1e !important; opacity: 0.5 !important; }
+            .photo-upload-box { background-color: #2c2c2e !important; border-color: #48484a !important; }
+            .photo-upload-box:active { background-color: #38383a !important; }
+            input[type="range"]::-webkit-slider-thumb { background: #e5e5ea !important; }
+            input[type="range"]:disabled::-webkit-slider-thumb { background: #48484a !important; }
+            .progress-container { background-color: #38383a !important; }
+            .decision-btn span { background-color: #2c2c2e !important; color: var(--text-main) !important; border-color: transparent !important; }
+            .decision-btn.eliminer input[type="radio"]:checked + span { background-color: #3a1c1c !important; border-color: var(--danger) !important; color: var(--danger) !important; }
+            .decision-btn.poursuivre input[type="radio"]:checked + span { background-color: #3a2a16 !important; border-color: var(--warning) !important; color: var(--warning) !important; }
+            .decision-btn.selectionner input[type="radio"]:checked + span { background-color: #1c3a24 !important; border-color: var(--success) !important; color: var(--success) !important; }
+            .modal-content { background: #1c1c1e !important; }
+            .modal-btn { color: var(--text-main) !important; }
+            .modal-btn.text-primary { color: var(--primary) !important; }
+            .modal-btn.text-danger { color: var(--danger) !important; }
+            .modal-btn:active { background: #2c2c2e !important; }
+            .card, li.hybrid-item { box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--bg-app); color: var(--text-main); padding-bottom: 120px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+        .view { display: none; padding: 15px; width: 100%; box-sizing: border-box; }
+        .view.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .home-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; padding: 20px; }
+        .home-container h1 { font-size: 32px; color: var(--primary); margin-bottom: 5px; line-height: 1.2; }
+        .home-subtitle { color: var(--text-muted); margin-bottom: 50px; font-weight: 600; font-size: 16px; }
+        .home-actions { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 320px; }
+        .btn-large { padding: 18px; font-size: 18px; width: 100%; border-radius: 14px; }
+
+        .list-top-area { position: -webkit-sticky; position: sticky; top: -15px; background-color: var(--bg-app); z-index: 50; padding: 15px 0 5px 0; margin-top: -15px; }
+        #view-form header { position: -webkit-sticky; position: sticky; top: -15px; background-color: var(--bg-app); z-index: 50; padding: 15px 0 10px 0; margin-top: -15px; border-bottom: 2px solid var(--border-color); }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px 0; }
+        header h1 { font-size: 20px; flex: 1; text-align: center; margin: 0; color: var(--text-main); }
+        header h2 { color: var(--text-main); margin: 0; font-weight: 800; letter-spacing: -0.5px; flex: 1; text-align: center; font-size: 22px; line-height: 1.2; }
+        
+        .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 75px; height: 65px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; color: white; cursor: pointer; gap: 4px; padding: 5px; flex-shrink: 0; transition: background-color 0.2s ease;}
+        .action-btn .icon { font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        
+        .btn-retour { background-color: var(--primary); }
+        .btn-coupe { background-color: var(--danger); }
+        .btn-filtre-off { background-color: var(--text-muted); }
+        .btn-filtre-on { background-color: var(--success); }
+
+        h3 { color: var(--text-main); margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+        .progress-wrapper { margin-bottom: 20px; }
+        .progress-text { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-align: right; }
+        .progress-container { width: 100%; background-color: #e5e5ea; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 15px; }
+        .progress-bar { height: 100%; background-color: var(--success); width: 0%; transition: width 0.4s ease; }
+        
+        .search-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid transparent; background-color: var(--bg-card); font-size: 16px; font-family: inherit; outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: border-color 0.2s ease; box-sizing: border-box; }
+        .search-input:focus { border-color: var(--primary); }
+
+        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+
+        ul { list-style: none; padding: 0; margin: 0; }
+        li.hybrid-item { position: relative; margin-bottom: 12px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); background: var(--bg-card); cursor: pointer; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } 
+        li.hybrid-item:active { transform: scale(0.98); }
+        li.hybrid-item.cut { display: none; }
+        li.hybrid-item.done { border-left: 6px solid var(--text-muted); }
+        li.hybrid-item.done-eliminer { border-left: 6px solid var(--danger); }
+        li.hybrid-item.done-poursuivre { border-left: 6px solid var(--warning); }
+        li.hybrid-item.done-selectionner { border-left: 6px solid var(--success); }
+        
+        .tag-indicator { margin-left: 8px; font-size: 18px; display: inline-block; vertical-align: middle; }
+        
+        /* En-tête de croisement */
+        li.header-croisement { position: -webkit-sticky; position: sticky; top: 0; z-index: 10; background-color: var(--bg-app); padding: 15px 10px 10px 10px; margin-bottom: 10px; font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; cursor: default; border-bottom: 2px solid var(--border-color); }
+        li.empty-state { background: transparent; box-shadow: none; text-align: center; justify-content: center; color: var(--text-muted); font-weight: 600; margin-top: 50px; }
+
+        @keyframes highlightPulse { 0% { background-color: var(--bg-card); } 50% { background-color: var(--primary); opacity: 0.3;} 100% { background-color: var(--bg-card); opacity: 1;} }
+        .highlight-scroll { animation: highlightPulse 1s ease; }
+
+        .li-content { display: flex; flex-direction: column; gap: 6px; pointer-events: none; } 
+        .position-text { font-size: 17px; font-weight: 700; color: var(--text-main); display: flex; align-items: center;}
+        .form-subtitle { text-align: center; font-size: 14px; font-weight: 600; color: var(--text-muted); margin-top: -15px; margin-bottom: 20px; }
+
+        label { display: block; font-weight: 600; font-size: 15px; margin-top: 15px; margin-bottom: 8px; color: var(--text-main); }
+        
+        input[type="date"], input[type="number"], textarea, input[type="text"] { width: 100%; max-width: 100%; display: block; padding: 14px; background-color: var(--bg-app); border: 2px solid transparent; border-radius: 12px; box-sizing: border-box; font-size: 16px; font-family: inherit; -webkit-appearance: none; appearance: none; transition: border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); background-color: var(--bg-card); }
+        input:disabled, textarea:disabled { background-color: #e5e5ea; color: #8e8e93; opacity: 0.6; cursor: not-allowed; }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .grid-ferm { display: grid; grid-template-columns: 35px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .col-header { text-align: center; font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        .row-label { font-weight: 600; font-size: 15px; color: var(--text-muted); }
+
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+        
+        .range-container { position: relative; margin: 10px 0 25px 0; }
+        input[type="range"] { width: 100%; max-width: 100%; display: block; -webkit-appearance: none; appearance: none; height: 10px; border-radius: 5px; outline: none; transition: background 0.3s ease; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05); }
+        input[type="range"]:disabled::-webkit-slider-thumb { background: #c7c7cc; box-shadow: none; cursor: not-allowed; }
+        .range-ticks { display: flex; justify-content: space-between; padding: 0 12px; margin-top: 8px; color: var(--text-muted); font-size: 13px; font-weight: 700; }
+
+        .photo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0 20px 0; }
+        .photo-upload-box { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 180px; height: 240px; border: 2px dashed #c7c7cc; border-radius: 14px; background-color: #f8f8f8; cursor: pointer; color: var(--primary); font-weight: 600; transition: background-color 0.2s; }
+        .photo-upload-box:active { background-color: #e5e5ea; }
+        .photo-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; z-index: 1; }
+        .camera-icon { font-size: 32px; margin-bottom: 6px; }
+        #photo-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 2; border-radius: inherit; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.2s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: var(--bg-card); width: 100%; max-width: 320px; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.95); transition: transform 0.2s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-content h4 { text-align: center; margin: 0; padding: 20px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: 600; color: var(--text-muted); }
+        .modal-btn { background: transparent; border: none; border-bottom: 1px solid var(--border-color); padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; width: 100%; border-radius: 0; }
+        .modal-btn:active { background: #f2f2f7; }
+        .modal-btn:last-child { border-bottom: none; }
+        .text-primary { color: var(--primary); }
+        .text-danger { color: var(--danger); }
+        .text-bold { font-weight: 700; color: var(--text-main); }
+
+        .decision-container { display: flex; flex-direction: column; gap: 12px; }
+        .decision-btn { display: block; width: 100%; cursor: pointer; }
+        .decision-btn input[type="radio"] { display: none; }
+        .decision-btn span { display: flex; align-items: center; justify-content: center; padding: 16px; border-radius: 12px; background-color: var(--bg-app); font-size: 16px; font-weight: 700; color: var(--text-main); border: 2px solid transparent; transition: all 0.2s ease; }
+        .decision-btn.eliminer input[type="radio"]:checked + span { background-color: #ffefee; border-color: var(--danger); color: var(--danger); }
+        .decision-btn.poursuivre input[type="radio"]:checked + span { background-color: #fff8e6; border-color: var(--warning); color: #d35400; }
+        .decision-btn.selectionner input[type="radio"]:checked + span { background-color: #eafaf1; border-color: var(--success); color: #27ae60; }
+
+        button { padding: 16px 20px; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; color: white; cursor: pointer; }
+        .btn-primary { background: var(--primary); }
+        .btn-secondary { background: var(--warning); color: #fff;}
+        .btn-success { background: var(--success); }
+        
+        .sticky-btn { position: fixed; bottom: 20px; left: 20px; right: 20px; width: calc(100% - 40px); background: var(--success); box-shadow: 0 4px 14px rgba(52, 199, 89, 0.4); z-index: 100; }
+        .sticky-btn:active { transform: scale(0.98); }
+        .btn-reset { margin-top: 30px; background: transparent; color: var(--danger); font-size: 15px; text-decoration: underline; width: 100%; font-weight: normal;}
+        
+        #phenotype-form { padding-bottom: 60px; }
+        .status-options { display: flex; flex-direction: column; gap: 12px; }
+        .checkbox-row { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background-color: var(--bg-app); font-weight: 700; cursor: pointer; margin: 0; }
+        .checkbox-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); flex-shrink: 0; }
+        .checkbox-row span { font-size: 16px; }
+        .modal-status-options { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .modal-status-options .checkbox-row { background-color: var(--bg-app); }
+        .terrain-dependent-fields { transition: opacity 0.2s ease; }
+
+
+        /* =========================================================
+           Améliorations ergonomie terrain - v11
+           ========================================================= */
+        :root {
+            --soft-blue: rgba(0, 122, 255, 0.10);
+            --soft-blue-border: rgba(0, 122, 255, 0.20);
+        }
+
+        .list-top-area {
+            top: -15px;
+            padding: 14px 0 14px 0;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.035);
+        }
+
+        .list-top-area header {
+            margin-bottom: 12px;
+        }
+
+        .list-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 7px;
+        }
+
+        .progress-text {
+            margin-bottom: 0;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-summary {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .progress-container {
+            height: 7px;
+            border-radius: 999px;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar { border-radius: 999px; }
+
+        .search-input {
+            border-radius: 16px;
+            min-height: 50px;
+        }
+
+        .filter-chip-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 2px 1px 0 1px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-chip-row::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            flex: 0 0 auto;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: 999px;
+            padding: 10px 13px;
+            min-height: 40px;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        li.header-croisement {
+            color: var(--primary);
+            background-color: var(--bg-app);
+            border-top: 1px solid var(--soft-blue-border);
+            border-bottom: 2px solid var(--soft-blue-border);
+            padding: 12px 12px 10px 12px;
+            margin: 14px 0 10px 0;
+            font-size: 13px;
+            line-height: 1.25;
+        }
+
+        li.header-croisement::before {
+            content: "CROISEMENT";
+            display: block;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+
+        .hybrid-subline {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 2px;
+            letter-spacing: -0.1px;
+        }
+
+        .form-status-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: -10px auto 18px auto;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: var(--soft-blue);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid var(--soft-blue-border);
+        }
+
+        .status-pill.cut {
+            background: rgba(255, 149, 0, 0.12);
+            color: #bf6b00;
+            border-color: rgba(255, 149, 0, 0.25);
+        }
+
+        .modal-hybrid-context {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+            padding: 0 18px 12px 18px;
+            margin-top: -8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        input[type="range"] {
+            height: 14px;
+            border-radius: 999px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.16);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .range-ticks {
+            padding: 0 4px;
+            margin-top: 12px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(90px + env(safe-area-inset-bottom));
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(28, 28, 30, 0.92);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 800;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            z-index: 2000;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.24);
+            max-width: calc(100vw - 40px);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .filter-chip { background: #1c1c1e; border-color: #38383a; color: var(--text-main); }
+            .filter-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
+            li.header-croisement { background-color: var(--bg-app) !important; border-color: rgba(10,132,255,0.32) !important; }
+            .status-pill { background: rgba(10,132,255,0.16); border-color: rgba(10,132,255,0.30); }
+            .status-pill.cut { background: rgba(255,159,10,0.16); border-color: rgba(255,159,10,0.30); color: var(--warning); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="view-home" class="view active">
+        <div class="home-container">
+            <h1>Projet -<br>Marqueur génétique</h1>
+            <p class="home-subtitle">Phénotypage verger</p>
+            
+            <div class="home-actions">
+                <input type="file" id="file-import" accept=".zip, .xlsx, .xls, .csv" style="display: none;">
+                <button id="btn-import" class="btn-secondary btn-large">📥 Importer (.zip ou Excel)</button>
+                <button id="btn-export" class="btn-primary btn-large">📦 Exporter Données (.zip)</button>
+                <button id="btn-go-list" class="btn-success btn-large" style="display: none;">📋 Accéder aux arbres</button>
+                
+                <button id="btn-reset" class="btn-reset">⚠️ Nouvelle saison (Tout effacer)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-list" class="view">
+        <div id="list-top-area" class="list-top-area">
+            <header>
+                <button id="btn-home-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Accueil</span></button>
+                <h1>Hybrides</h1>
+                <button id="btn-filter" type="button" class="action-btn btn-filtre-off">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </span>
+                    <span>Filtre</span>
+                </button>
+            </header>
+
+            <div id="progress-wrapper" class="progress-wrapper" style="display: none;">
+                <div class="list-summary-row">
+                    <div class="progress-text"><span id="progress-count">0</span> / <span id="progress-total">0</span> évalués</div>
+                    <div class="status-summary"><span id="summary-tags">0</span> 🏷️ · <span id="summary-cuts">0</span> ✂️</div>
+                </div>
+                <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Arbre, rang ou croisement...">
+                <div class="filter-chip-row" id="filter-chip-row" aria-label="Filtres">
+                    <button type="button" class="filter-chip active" data-filter="all">Tous</button>
+                    <button type="button" class="filter-chip" data-filter="pending">À faire</button>
+                    <button type="button" class="filter-chip" data-filter="done">Évalués</button>
+                    <button type="button" class="filter-chip" data-filter="decision-eliminer">❌ Éliminer</button>
+                    <button type="button" class="filter-chip" data-filter="decision-poursuivre">➡️ Poursuivre</button>
+                    <button type="button" class="filter-chip" data-filter="decision-selectionner">✅ Sélectionner</button>
+                    <button type="button" class="filter-chip" data-filter="tag">🏷️ Étiquettes</button>
+                    <button type="button" class="filter-chip" data-filter="cut">✂️ Coupés</button>
+                </div>
+            </div>
+        </div>
+
+        <ul id="hybrids-list"></ul>
+    </div>
+
+    <div id="view-form" class="view">
+        <header>
+            <button id="btn-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Retour</span></button>
+            <h2 id="current-hybrid-title">Rang<br>Arbre</h2>
+            <button id="btn-reset-hybrid" type="button" class="action-btn btn-coupe"><span class="icon">🔄</span><span>Réinit.</span></button>
+        </header>
+        
+        <div id="form-croisement" class="form-subtitle"></div>
+        <div id="form-status-badges" class="form-status-badges"></div>
+        
+        <form id="phenotype-form">
+            <input type="hidden" id="hybrid-id">
+            
+            <div class="card">
+                <h3>📍 Notation terrain</h3>
+                <label>Charge (0 à 3) : <span id="val-charge">0</span></label>
+                <div class="range-container">
+                    <input type="range" id="charge" min="0" max="3" step="1" value="0">
+                    <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
+                </div>
+
+                <div id="terrain-dependent-fields" class="terrain-dependent-fields">
+                    <label>Date d'observation :</label>
+                    <input type="date" id="date-maturite" required>
+
+                    <label>Fente pistillaire (0 à 3) : <span id="val-fente">0</span></label>
+                    <div class="range-container">
+                        <input type="range" id="fente" min="0" max="3" step="1" value="0">
+                        <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="labo-card">
+                <h3>🔬 Notation laboratoire</h3>
+                
+                <label>Photo des fruits :</label>
+                <div class="photo-container">
+                    <div class="photo-upload-box" id="photo-box">
+                        <div id="photo-placeholder" class="photo-placeholder">
+                            <span class="camera-icon">📷</span>
+                            <span id="photo-label-text">Prendre une photo</span>
+                        </div>
+                        <img id="photo-preview" src="" alt="Aperçu de la photo">
+                    </div>
+                    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
+                </div>
+
+                <label>Calibre (4 fruits) :</label>
+                <div class="grid-4">
+                    <input type="number" id="calibre-1" inputmode="decimal" placeholder="F1">
+                    <input type="number" id="calibre-2" inputmode="decimal" placeholder="F2">
+                    <input type="number" id="calibre-3" inputmode="decimal" placeholder="F3">
+                    <input type="number" id="calibre-4" inputmode="decimal" placeholder="F4">
+                </div>
+
+                <label>Fermeté (4 fruits) :</label>
+                <div class="grid-ferm">
+                    <span></span><span class="col-header">Cuvette</span><span class="col-header">Joue</span>
+                    <span class="row-label">F1</span><input type="number" id="ferm-1a" inputmode="decimal"><input type="number" id="ferm-1b" inputmode="decimal">
+                    <span class="row-label">F2</span><input type="number" id="ferm-2a" inputmode="decimal"><input type="number" id="ferm-2b" inputmode="decimal">
+                    <span class="row-label">F3</span><input type="number" id="ferm-3a" inputmode="decimal"><input type="number" id="ferm-3b" inputmode="decimal">
+                    <span class="row-label">F4</span><input type="number" id="ferm-4a" inputmode="decimal"><input type="number" id="ferm-4b" inputmode="decimal">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚖️ Décision</h3>
+                <div class="decision-container">
+                    <label class="decision-btn eliminer"><input type="radio" name="decision" value="Eliminer"><span>❌ Éliminer</span></label>
+                    <label class="decision-btn poursuivre"><input type="radio" name="decision" value="Poursuivre"><span>➡️ Poursuivre</span></label>
+                    <label class="decision-btn selectionner"><input type="radio" name="decision" value="Sélectionner"><span>✅ Sélectionner</span></label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💬 Commentaires</h3>
+                <textarea id="commentaire" rows="3" placeholder="Observations spécifiques sur l'arbre ou les fruits..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-success sticky-btn">Enregistrer l'hybride</button>
+        </form>
+    </div>
+
+    <div id="photo-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h4>Que voulez-vous faire ?</h4>
+            <button type="button" id="btn-replace-photo" class="modal-btn text-primary">Remplacer la photo</button>
+            <button type="button" id="btn-delete-photo" class="modal-btn text-danger">Supprimer la photo</button>
+            <button type="button" id="btn-cancel-photo" class="modal-btn text-bold">Annuler</button>
+        </div>
+    </div>
+
+    <div id="tag-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h4>Statut rapide</h4>
+            <div id="modal-hybrid-context" class="modal-hybrid-context"></div>
+            <div class="modal-status-options">
+                <label class="checkbox-row"><input type="checkbox" id="modal-tag-missing"><span>🏷️ Étiquette à refaire</span></label>
+                <label class="checkbox-row"><input type="checkbox" id="modal-tree-cut"><span>✂️ Arbre coupé</span></label>
+            </div>
+            <button type="button" id="btn-status-save" class="modal-btn text-primary">Enregistrer</button>
+            <button type="button" id="btn-tag-cancel" class="modal-btn text-bold">Annuler</button>
+        </div>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        // Initialisation de localForage
+        localforage.config({
+            name: 'PhenotypageApp',
+            storeName: 'phenotypage_data'
+        });
+
+        let hybridesInitiaux = [];
+        let dataStore = {};
+        let photosStore = {}; 
+        let lastOpenedHybridId = null; 
+        let filterActive = false; 
+        let filterMode = 'all'; 
+        let currentTagHybridId = null; 
+        let currentTempPhoto = null;
+
+        function sortHybrids(hybrids) {
+            const croisementMinRang = {};
+            hybrids.forEach(h => {
+                if (croisementMinRang[h.croisement] === undefined) {
+                    croisementMinRang[h.croisement] = h.rang;
+                } else {
+                    croisementMinRang[h.croisement] = Math.min(croisementMinRang[h.croisement], h.rang);
+                }
+            });
+
+            hybrids.sort((a, b) => {
+                const minA = croisementMinRang[a.croisement];
+                const minB = croisementMinRang[b.croisement];
+                
+                if (minA !== minB) return minA - minB;
+                if (a.croisement !== b.croisement) return a.croisement.localeCompare(b.croisement);
+                if (a.rang !== b.rang) return a.rang - b.rang;
+                
+                return a.arbre - b.arbre;
+            });
+        }
+
+        function compressBase64(base64Str, maxWidth, quality) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth) {
+                        height = Math.round(height * maxWidth / width);
+                        width = maxWidth;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => resolve(base64Str);
+                img.src = base64Str;
+            });
+        }
+
+        // Sauvegarde asynchrone dans IndexedDB via localForage
+        async function saveDataLocally() {
+            try {
+                await localforage.setItem('hybridesList', hybridesInitiaux);
+                await localforage.setItem('phenotypeData', dataStore);
+                await localforage.setItem('photosData', photosStore);
+            } catch (err) {
+                console.error("Erreur de sauvegarde locale:", err);
+            }
+        }
+
+        const couleursCharge = ['#e74c3c', '#e67e22', '#f1c40f', '#27ae60'];
+        const couleursFente  = ['#27ae60', '#f1c40f', '#e67e22', '#e74c3c'];
+
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(() => toast.classList.remove('show'), 1300);
+        }
+
+        function getHybridSummary(data) {
+            if (!data || data.status !== 'done') return '';
+            const parts = [];
+            if (data.charge !== undefined && data.charge !== '') parts.push(`Charge ${data.charge}`);
+            if (data.fente !== undefined && data.fente !== '' && data.fente !== 'N/A') parts.push(`Fente ${data.fente}`);
+            if (data.date) parts.push(data.date);
+            if (data.decision) parts.push(data.decision);
+            return parts.join(' · ');
+        }
+
+        function updateFilterUI() {
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.filter === filterMode);
+            });
+            const label = {
+                all: 'Tous',
+                pending: 'À faire',
+                done: 'Évalués',
+                'decision-eliminer': 'Éliminer',
+                'decision-poursuivre': 'Poursuivre',
+                'decision-selectionner': 'Sélect.',
+                tag: 'Étiq.',
+                cut: 'Coupés'
+            }[filterMode] || 'Filtre';
+            const btnFilterText = document.querySelector('#btn-filter span:last-child');
+            if (btnFilterText) btnFilterText.textContent = label;
+        }
+
+        function updateSliderVisuals(sliderEl, displayEl, palette) {
+            const val = parseInt(sliderEl.value);
+            displayEl.textContent = val;
+            sliderEl.style.background = palette[val];
+        }
+
+        function toggleDependentFields(chargeVal) {
+            const dateInput = document.getElementById('date-maturite');
+            const fenteSlider = document.getElementById('fente');
+            const valFente = document.getElementById('val-fente');
+            const laboCard = document.getElementById('labo-card');
+            const terrainDependentFields = document.getElementById('terrain-dependent-fields');
+            const today = new Date().toISOString().split('T')[0];
+
+            if (parseInt(chargeVal) === 0) {
+                terrainDependentFields.style.display = 'none';
+                dateInput.disabled = true;
+                dateInput.required = false;
+                dateInput.value = "";
+                fenteSlider.disabled = true;
+                valFente.textContent = "N/A";
+                fenteSlider.style.background = "var(--border-color)"; 
+                laboCard.style.display = 'none';
+            } else {
+                terrainDependentFields.style.display = 'block';
+                dateInput.disabled = false;
+                dateInput.required = true;
+                if (!dateInput.value) dateInput.value = today;
+                fenteSlider.disabled = false;
+                updateSliderVisuals(fenteSlider, valFente, couleursFente);
+                laboCard.style.display = 'block';
+            }
+        }
+
+        function returnToList() {
+            navigateTo('view-list');
+            if (lastOpenedHybridId) {
+                setTimeout(() => {
+                    const el = document.getElementById('list-item-' + lastOpenedHybridId);
+                    if (el && el.style.display !== 'none') {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('highlight-scroll');
+                        setTimeout(() => el.classList.remove('highlight-scroll'), 1200);
+                    }
+                }, 50); 
+            }
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const items = document.querySelectorAll('#hybrids-list li');
+            let currentHeader = null;
+            let headerHasVisibleItems = false;
+            
+            items.forEach(li => {
+                if (li.classList.contains('header-croisement')) {
+                    if (currentHeader) currentHeader.style.display = headerHasVisibleItems ? 'block' : 'none';
+                    currentHeader = li;
+                    headerHasVisibleItems = false;
+                } else if (li.classList.contains('hybrid-item')) {
+                    const text = li.textContent.toLowerCase();
+                    const cross = li.getAttribute('data-cross') ? li.getAttribute('data-cross').toLowerCase() : "";
+                    const status = li.getAttribute('data-status');
+                    const tagMissing = li.getAttribute('data-tag') === 'true';
+                    const treeCut = li.getAttribute('data-cut') === 'true';
+                    const decision = li.getAttribute('data-decision') || '';
+                    
+                    let matchSearch = text.includes(term) || cross.includes(term);
+                    let matchFilter = true;
+
+                    if (filterMode === 'pending') matchFilter = status === 'pending';
+                    else if (filterMode === 'done') matchFilter = status === 'done';
+                    else if (filterMode === 'decision-eliminer') matchFilter = decision === 'Eliminer';
+                    else if (filterMode === 'decision-poursuivre') matchFilter = decision === 'Poursuivre';
+                    else if (filterMode === 'decision-selectionner') matchFilter = decision === 'Sélectionner';
+                    else if (filterMode === 'tag') matchFilter = tagMissing;
+                    else if (filterMode === 'cut') matchFilter = treeCut;
+
+                    if (matchSearch && matchFilter) {
+                        li.style.display = 'flex';
+                        headerHasVisibleItems = true;
+                    } else {
+                        li.style.display = 'none';
+                    }
+                }
+            });
+            if (currentHeader) currentHeader.style.display = headerHasVisibleItems ? 'block' : 'none';
+        }
+
+        function processExcelData(dataArray) {
+            try {
+                const workbook = XLSX.read(dataArray, {type: 'array'});
+                const sheetName = workbook.SheetNames.includes("Données complètes") ? "Données complètes" : workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                
+                let headerRowIndex = -1;
+                let cols = {};
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if(!row) continue;
+                    for (let j = 0; j < row.length; j++) {
+                        const cell = String(row[j] || '').trim().toUpperCase();
+                        if (cell === 'DENOMINATIONS') cols.denom = j;
+                        if (cell === 'RANG') cols.rang = j;
+                        if (cell === 'ARBRE') cols.arbre = j;
+                        if (cell === 'STATUT') cols.statut = j;
+                        if (cell === 'DÉCISION' || cell === 'DECISION') cols.decision = j;
+                        if (cell === 'ETIQUETTE À FAIRE' || cell === 'ETIQUETTE A FAIRE' || cell === 'ETIQUETTE À REFAIRE' || cell === 'ETIQUETTE A REFAIRE') cols.etiquette = j;
+                        if (cell === 'ARBRE COUPÉ' || cell === 'ARBRE COUPE') cols.treeCut = j;
+                        if (cell === 'DATE DE MATURITÉ' || cell === 'DATE DE MATURITE' || cell === "DATE D'OBSERVATION" || cell === 'DATE D’OBSERVATION') cols.date = j;
+                        if (cell === 'CHARGE') cols.charge = j;
+                        if (cell === 'FENTE PISTILLAIRE') cols.fente = j;
+                        if (cell === 'CALIBRE F1') cols.cal1 = j;
+                        if (cell === 'CALIBRE F2') cols.cal2 = j;
+                        if (cell === 'CALIBRE F3') cols.cal3 = j;
+                        if (cell === 'CALIBRE F4') cols.cal4 = j;
+                        if (cell === 'FERMETÉ F1 CUVETTE' || cell === 'FERMETE F1 CUVETTE') cols.f1a = j;
+                        if (cell === 'FERMETÉ F1 JOUE' || cell === 'FERMETE F1 JOUE') cols.f1b = j;
+                        if (cell === 'FERMETÉ F2 CUVETTE' || cell === 'FERMETE F2 CUVETTE') cols.f2a = j;
+                        if (cell === 'FERMETÉ F2 JOUE' || cell === 'FERMETE F2 JOUE') cols.f2b = j;
+                        if (cell === 'FERMETÉ F3 CUVETTE' || cell === 'FERMETE F3 CUVETTE') cols.f3a = j;
+                        if (cell === 'FERMETÉ F3 JOUE' || cell === 'FERMETE F3 JOUE') cols.f3b = j;
+                        if (cell === 'FERMETÉ F4 CUVETTE' || cell === 'FERMETE F4 CUVETTE') cols.f4a = j;
+                        if (cell === 'FERMETÉ F4 JOUE' || cell === 'FERMETE F4 JOUE') cols.f4b = j;
+                        if (cell === 'COMMENTAIRE') cols.com = j;
+                        if (cell === 'NOM PHOTO') cols.photoName = j;
+                    }
+                    if (cols.rang !== undefined && cols.arbre !== undefined) {
+                        headerRowIndex = i;
+                        break;
+                    }
+                }
+
+                if (headerRowIndex === -1) {
+                    alert("Erreur : Impossible de trouver les colonnes 'RANG' et 'ARBRE'.");
+                    return;
+                }
+
+                let nouveauxHybrides = [];
+                const newDataStore = {};
+
+                for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if(!row) continue;
+                    
+                    const rang = row[cols.rang];
+                    const arbre = row[cols.arbre];
+
+                    if (rang !== undefined && arbre !== undefined && rang !== "" && arbre !== "") {
+                        const id = `R${rang}_A${arbre}`;
+                        nouveauxHybrides.push({
+                            id: id,
+                            croisement: cols.denom !== undefined ? (row[cols.denom] || "Croisement Inconnu") : "Croisement Inconnu",
+                            rang: parseInt(rang),
+                            arbre: parseInt(arbre)
+                        });
+
+                        const isTagMissing = cols.etiquette !== undefined && String(row[cols.etiquette]).toUpperCase() === 'OUI';
+                        const statut = cols.statut !== undefined ? row[cols.statut] : '';
+                        const treeCutFromStatus = (statut === 'Coupé' || statut === 'Coupe');
+                        const isTreeCut = treeCutFromStatus || (cols.treeCut !== undefined && String(row[cols.treeCut]).toUpperCase() === 'OUI');
+                        const isDone = (statut === 'Évalué' || statut === 'Evalue');
+                        const hasImportedNotation = isDone || treeCutFromStatus || isTagMissing || isTreeCut ||
+                            (cols.decision !== undefined && row[cols.decision]) ||
+                            (cols.charge !== undefined && row[cols.charge] !== undefined && row[cols.charge] !== "");
+
+                        if (hasImportedNotation) {
+                                newDataStore[id] = {
+                                    status: isDone ? 'done' : 'pending',
+                                    tagMissing: isTagMissing,
+                                    treeCut: isTreeCut,
+                                    decision: cols.decision !== undefined ? (row[cols.decision] || "") : "",
+                                    date: cols.date !== undefined ? (row[cols.date] || "") : "",
+                                    charge: cols.charge !== undefined && row[cols.charge] !== undefined ? row[cols.charge] : 0,
+                                    fente: cols.fente !== undefined && row[cols.fente] !== undefined ? row[cols.fente] : 0,
+                                    "calibre-1": cols.cal1 !== undefined ? (row[cols.cal1] || "") : "",
+                                    "calibre-2": cols.cal2 !== undefined ? (row[cols.cal2] || "") : "",
+                                    "calibre-3": cols.cal3 !== undefined ? (row[cols.cal3] || "") : "",
+                                    "calibre-4": cols.cal4 !== undefined ? (row[cols.cal4] || "") : "",
+                                    "ferm-1a": cols.f1a !== undefined ? (row[cols.f1a] || "") : "",
+                                    "ferm-1b": cols.f1b !== undefined ? (row[cols.f1b] || "") : "",
+                                    "ferm-2a": cols.f2a !== undefined ? (row[cols.f2a] || "") : "",
+                                    "ferm-2b": cols.f2b !== undefined ? (row[cols.f2b] || "") : "",
+                                    "ferm-3a": cols.f3a !== undefined ? (row[cols.f3a] || "") : "",
+                                    "ferm-3b": cols.f3b !== undefined ? (row[cols.f3b] || "") : "",
+                                    "ferm-4a": cols.f4a !== undefined ? (row[cols.f4a] || "") : "",
+                                    "ferm-4b": cols.f4b !== undefined ? (row[cols.f4b] || "") : "",
+                                    commentaire: cols.com !== undefined ? (row[cols.com] || "") : "",
+                                    photoName: cols.photoName !== undefined ? (row[cols.photoName] || "") : ""
+                                };
+                        }
+                    }
+                }
+
+                sortHybrids(nouveauxHybrides);
+                hybridesInitiaux = nouveauxHybrides;
+                dataStore = newDataStore;
+                
+                saveDataLocally().then(() => {
+                    document.getElementById('btn-go-list').style.display = 'block';
+                    document.getElementById('btn-go-list').click();
+                });
+                
+            } catch(error) { alert("Erreur lors de la lecture du fichier : " + error.message); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Chargement initial depuis localForage
+            Promise.all([
+                localforage.getItem('hybridesList'),
+                localforage.getItem('phenotypeData'),
+                localforage.getItem('photosData')
+            ]).then(([hybrids, data, photos]) => {
+                hybridesInitiaux = hybrids || [];
+                dataStore = data || {};
+                photosStore = photos || {};
+                
+                if (hybridesInitiaux.length > 0) {
+                    document.getElementById('btn-go-list').style.display = 'block';
+                }
+                renderList();
+            }).catch(err => console.warn("Erreur chargement localForage:", err));
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                const confirmation = prompt("ATTENTION : Cela va effacer toutes les notations et photos en mémoire sur cet appareil. Avez-vous bien exporté vos données en ZIP ?\n\nPour tout effacer, tapez exactement : CONFIRMER");
+                if (confirmation === "CONFIRMER") {
+                    localforage.clear().then(() => {
+                        location.reload();
+                    });
+                } else if (confirmation !== null) {
+                    alert("Suppression annulée : le texte saisi ne correspond pas à CONFIRMER.");
+                }
+            });
+
+            document.getElementById('btn-go-list').addEventListener('click', () => {
+                navigateTo('view-list');
+                renderList();
+            });
+
+            document.getElementById('btn-home-back').addEventListener('click', () => {
+                navigateTo('view-home');
+            });
+
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+
+            document.getElementById('btn-filter').addEventListener('click', function() {
+                const modes = ['all', 'pending', 'done', 'decision-eliminer', 'decision-poursuivre', 'decision-selectionner', 'tag', 'cut'];
+                const nextIndex = (modes.indexOf(filterMode) + 1) % modes.length;
+                filterMode = modes[nextIndex];
+                this.classList.toggle('btn-filtre-on', filterMode !== 'all');
+                this.classList.toggle('btn-filtre-off', filterMode === 'all');
+                updateFilterUI();
+                applyFilters();
+            });
+
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    filterMode = chip.dataset.filter;
+                    const filterButton = document.getElementById('btn-filter');
+                    filterButton.classList.toggle('btn-filtre-on', filterMode !== 'all');
+                    filterButton.classList.toggle('btn-filtre-off', filterMode === 'all');
+                    updateFilterUI();
+                    applyFilters();
+                });
+            });
+
+            document.getElementById('btn-import').addEventListener('click', () => {
+                document.getElementById('file-import').click();
+            });
+
+            document.getElementById('file-import').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.name.toLowerCase().endsWith('.zip')) {
+                    try {
+                        const zip = await JSZip.loadAsync(file);
+                        let excelData = null;
+                        const newPhotosStore = {};
+
+                        const fileNames = Object.keys(zip.files);
+                        for (let name of fileNames) {
+                            if (name.match(/\.(jpg|jpeg|png)$/i) && !zip.files[name].dir) {
+                                const base64 = await zip.file(name).async("base64");
+                                const idMatch = name.match(/([^\/]+)\.(jpg|jpeg|png)$/i);
+                                if (idMatch) {
+                                    const rawDataUrl = "data:image/jpeg;base64," + base64;
+                                    const compressed = await compressBase64(rawDataUrl, 400, 0.4);
+                                    newPhotosStore[idMatch[1]] = compressed;
+                                }
+                            } else if (name.endsWith('.xlsx')) {
+                                excelData = await zip.file(name).async("uint8array");
+                            }
+                        }
+
+                        if (!excelData) {
+                            alert("Erreur : Aucun fichier Excel trouvé dans le ZIP.");
+                            return;
+                        }
+
+                        photosStore = newPhotosStore;
+                        processExcelData(excelData);
+
+                    } catch (err) {
+                        alert("Erreur lors de l'ouverture du fichier ZIP.");
+                    }
+                } 
+                else {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const data = new Uint8Array(event.target.result);
+                        processExcelData(data);
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+                
+                document.getElementById('file-import').value = ""; 
+            });
+
+            const photoInput = document.getElementById('photo-input');
+            const photoBox = document.getElementById('photo-box');
+            const photoPlaceholder = document.getElementById('photo-placeholder');
+            const photoPreview = document.getElementById('photo-preview');
+            const photoModal = document.getElementById('photo-modal');
+
+            photoBox.addEventListener('click', () => {
+                if (photoPreview.style.display === 'block') {
+                    photoModal.classList.add('active');
+                } else {
+                    photoInput.click();
+                }
+            });
+
+            document.getElementById('btn-replace-photo').addEventListener('click', () => {
+                photoModal.classList.remove('active');
+                photoInput.click();
+            });
+
+            document.getElementById('btn-delete-photo').addEventListener('click', () => {
+                photoModal.classList.remove('active');
+                currentTempPhoto = null; 
+                
+                photoInput.value = "";
+                photoPreview.src = "";
+                photoPreview.style.display = 'none';
+                photoPlaceholder.style.display = 'flex';
+                
+                const currentId = document.getElementById('hybrid-id').value;
+                if(photosStore[currentId]) {
+                    delete photosStore[currentId];
+                }
+                if(dataStore[currentId]) {
+                    dataStore[currentId].photoName = "";
+                }
+                saveDataLocally();
+            });
+
+            document.getElementById('btn-cancel-photo').addEventListener('click', () => {
+                photoModal.classList.remove('active');
+            });
+
+            photoInput.addEventListener('change', () => {
+                if (photoInput.files && photoInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 400; 
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > MAX_WIDTH) {
+                                height = Math.round(height * MAX_WIDTH / width);
+                                width = MAX_WIDTH;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            currentTempPhoto = canvas.toDataURL('image/jpeg', 0.4); 
+                            photoPreview.src = currentTempPhoto;
+                            photoPreview.style.display = 'block';
+                            photoPlaceholder.style.display = 'none';
+                        }
+                        img.src = e.target.result;
+                    }
+                    reader.readAsDataURL(photoInput.files[0]);
+                }
+            });
+
+            const tagModal = document.getElementById('tag-modal');
+            const modalTagMissing = document.getElementById('modal-tag-missing');
+            const modalTreeCut = document.getElementById('modal-tree-cut');
+            
+            document.getElementById('btn-status-save').addEventListener('click', () => {
+                tagModal.classList.remove('active');
+                if (currentTagHybridId) {
+                    let d = dataStore[currentTagHybridId] || { status: 'pending' };
+                    d.tagMissing = modalTagMissing.checked;
+                    d.treeCut = modalTreeCut.checked;
+                    dataStore[currentTagHybridId] = d;
+                    saveDataLocally().then(() => {
+                        renderList();
+                        showToast("Statut enregistré ✅");
+                    });
+                }
+            });
+
+            document.getElementById('btn-tag-cancel').addEventListener('click', () => {
+                tagModal.classList.remove('active');
+            });
+
+            const chargeSlider = document.getElementById('charge');
+            const fenteSlider = document.getElementById('fente');
+            const valCharge = document.getElementById('val-charge');
+            const valFente = document.getElementById('val-fente');
+
+            updateSliderVisuals(chargeSlider, valCharge, couleursCharge);
+            updateSliderVisuals(fenteSlider, valFente, couleursFente);
+
+            chargeSlider.addEventListener('input', () => {
+                updateSliderVisuals(chargeSlider, valCharge, couleursCharge);
+                toggleDependentFields(chargeSlider.value);
+            });
+            fenteSlider.addEventListener('input', () => updateSliderVisuals(fenteSlider, valFente, couleursFente));
+
+            // Décisions désélectionnables : comportement fiable sur iPhone/Safari.
+            // Un clic sélectionne la décision ; un second clic sur la même décision la retire.
+            document.querySelectorAll('.decision-btn').forEach(label => {
+                label.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const input = this.querySelector('input[name="decision"]');
+                    if (!input) return;
+
+                    const wasChecked = input.checked;
+
+                    document.querySelectorAll('input[name="decision"]').forEach(radio => {
+                        radio.checked = false;
+                    });
+
+                    if (!wasChecked) {
+                        input.checked = true;
+                    }
+                });
+            });
+
+            const labInputs = [
+                'calibre-1', 'calibre-2', 'calibre-3', 'calibre-4',
+                'ferm-1a', 'ferm-1b', 'ferm-2a', 'ferm-2b',
+                'ferm-3a', 'ferm-3b', 'ferm-4a', 'ferm-4b'
+            ];
+            
+            labInputs.forEach((id, index) => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.addEventListener('input', function() {
+                        if (this.value.length === 2 && index < labInputs.length - 1) {
+                            document.getElementById(labInputs[index + 1]).focus();
+                        }
+                    });
+                }
+            });
+        });
+
+        function renderList() {
+            const listEl = document.getElementById('hybrids-list');
+            listEl.innerHTML = '';
+            
+            const progressWrapper = document.getElementById('progress-wrapper');
+            
+            if (hybridesInitiaux.length === 0) {
+                progressWrapper.style.display = 'none';
+                const emptyLi = document.createElement('li');
+                emptyLi.className = 'empty-state';
+                emptyLi.textContent = "Aucun hybride. Veuillez importer votre fichier Excel ou Zip depuis l'accueil.";
+                listEl.appendChild(emptyLi);
+                return;
+            } else {
+                progressWrapper.style.display = 'block';
+            }
+
+            let croisementActuel = ""; 
+            let doneCount = 0;
+            let tagCount = 0;
+            let cutCount = 0;
+            
+            hybridesInitiaux.forEach(h => {
+                if (h.croisement !== croisementActuel) {
+                    const headerLi = document.createElement('li');
+                    headerLi.className = 'header-croisement';
+                    headerLi.textContent = h.croisement;
+                    listEl.appendChild(headerLi);
+                    croisementActuel = h.croisement; 
+                }
+
+                let etat = dataStore[h.id] ? dataStore[h.id].status : 'pending';
+                let tagMissing = dataStore[h.id] ? dataStore[h.id].tagMissing : false;
+                let treeCut = dataStore[h.id] ? (dataStore[h.id].treeCut || dataStore[h.id].status === 'cut') : false;
+                if (etat === 'cut') etat = 'pending';
+                
+                if (etat === 'done') doneCount++;
+                if (tagMissing) tagCount++;
+                if (treeCut) cutCount++;
+
+                let decisionClass = '';
+                let badge = '';
+
+                if (etat === 'done') {
+                    const dec = dataStore[h.id].decision;
+                    if (dec === 'Eliminer') { badge = '❌'; decisionClass = ' done-eliminer'; }
+                    else if (dec === 'Poursuivre') { badge = '➡️'; decisionClass = ' done-poursuivre'; }
+                    else if (dec === 'Sélectionner') { badge = '✅'; decisionClass = ' done-selectionner'; }
+                    else { badge = '✅'; decisionClass = ' done'; }
+                }
+
+                const li = document.createElement('li');
+                li.id = 'list-item-' + h.id; 
+                li.className = `hybrid-item ${etat}${decisionClass}`;
+                li.setAttribute('data-cross', h.croisement); 
+                li.setAttribute('data-status', etat);
+                li.setAttribute('data-tag', tagMissing ? 'true' : 'false');
+                li.setAttribute('data-cut', treeCut ? 'true' : 'false');
+                li.setAttribute('data-decision', dataStore[h.id] && dataStore[h.id].decision ? dataStore[h.id].decision : ''); 
+                
+                let tagBadge = tagMissing ? `<span class="tag-indicator" title="Étiquette à refaire">🏷️</span>` : ``;
+                let cutBadge = treeCut ? `<span class="tag-indicator" title="Arbre coupé">✂️</span>` : ``;
+                
+                const summary = getHybridSummary(dataStore[h.id]);
+                let summaryHTML = summary ? `<span class="hybrid-subline">${summary}</span>` : ``;
+                let contentHTML = `<div class="li-content"><span class="position-text">Rang ${h.rang} - Arbre ${h.arbre} ${tagBadge} ${cutBadge}</span>${summaryHTML}</div>`;
+                
+                if (etat === 'done') {
+                    contentHTML += `<span>${badge}</span>`;
+                }
+                
+                li.innerHTML = contentHTML;
+
+                let pressTimer;
+                let startY = 0;
+                let isLongPress = false;
+
+                li.addEventListener('touchstart', (e) => {
+                    isLongPress = false;
+                    startY = e.touches[0].clientY;
+                    pressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        currentTagHybridId = h.id;
+                        const d = dataStore[h.id] || {};
+                        document.getElementById('modal-tag-missing').checked = !!d.tagMissing;
+                        document.getElementById('modal-tree-cut').checked = !!(d.treeCut || d.status === 'cut');
+                        const contextEl = document.getElementById('modal-hybrid-context');
+                        if (contextEl) contextEl.textContent = `Rang ${h.rang} - Arbre ${h.arbre}`;
+                        document.getElementById('tag-modal').classList.add('active');
+                    }, 500); 
+                }, {passive: true});
+
+                li.addEventListener('touchmove', (e) => {
+                    let diffY = Math.abs(e.touches[0].clientY - startY);
+                    if (diffY > 10) {
+                        clearTimeout(pressTimer); 
+                    }
+                }, {passive: true});
+
+                li.addEventListener('touchend', () => clearTimeout(pressTimer));
+                li.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+
+                li.addEventListener('click', (e) => {
+                    if (isLongPress) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return; 
+                    }
+                    openForm(h);
+                });
+
+                listEl.appendChild(li);
+            });
+
+            document.getElementById('progress-count').textContent = doneCount;
+            document.getElementById('progress-total').textContent = hybridesInitiaux.length;
+            document.getElementById('summary-tags').textContent = tagCount;
+            document.getElementById('summary-cuts').textContent = cutCount;
+            const percentage = (doneCount / hybridesInitiaux.length) * 100;
+            document.getElementById('progress-bar').style.width = percentage + '%';
+
+            updateFilterUI();
+            applyFilters(); 
+            
+            setTimeout(() => {
+                const topAreaHeight = document.getElementById('list-top-area').offsetHeight;
+                document.querySelectorAll('.header-croisement').forEach(header => {
+                    header.style.top = (topAreaHeight - 15) + 'px'; 
+                });
+            }, 50);
+        }
+
+        function openForm(hybride) {
+            lastOpenedHybridId = hybride.id; 
+            currentTempPhoto = null; 
+            
+            navigateTo('view-form');
+            
+            document.getElementById('current-hybrid-title').innerHTML = `Rang ${hybride.rang}<br>Arbre ${hybride.arbre}`;
+            
+            document.getElementById('form-croisement').textContent = hybride.croisement;
+            const formStatusBadges = document.getElementById('form-status-badges');
+            const statusData = dataStore[hybride.id] || {};
+            const statusBadges = [];
+            if (statusData.tagMissing) statusBadges.push('<span class="status-pill">🏷️ Étiquette à refaire</span>');
+            if (statusData.treeCut || statusData.status === 'cut') statusBadges.push('<span class="status-pill cut">✂️ Arbre coupé</span>');
+            formStatusBadges.innerHTML = statusBadges.join('');
+            document.getElementById('hybrid-id').value = hybride.id;
+            
+            document.getElementById('phenotype-form').reset();
+            
+            updateSliderVisuals(document.getElementById('charge'), document.getElementById('val-charge'), couleursCharge);
+            updateSliderVisuals(document.getElementById('fente'), document.getElementById('val-fente'), couleursFente);
+            document.querySelectorAll('input[name="decision"]').forEach(radio => { radio.checked = false; radio.dataset.wasChecked = 'false'; });
+            
+            document.getElementById('photo-input').value = "";
+            const photoPlaceholder = document.getElementById('photo-placeholder');
+            const photoPreview = document.getElementById('photo-preview');
+            
+            photoPlaceholder.style.display = 'flex';
+            photoPreview.style.display = 'none';
+            photoPreview.src = '';
+
+            const today = new Date().toISOString().split('T')[0];
+
+            if(dataStore[hybride.id]) {
+                const d = dataStore[hybride.id];
+                document.getElementById('charge').value = d.charge !== undefined ? d.charge : 0;
+                document.getElementById('fente').value = (d.fente !== undefined && d.fente !== "N/A") ? d.fente : 0;
+                document.getElementById('date-maturite').value = d.date || "";
+                document.getElementById('commentaire').value = d.commentaire || "";
+                
+                if (d.decision) {
+                    const decisionRadio = document.querySelector(`input[name="decision"][value="${d.decision}"]`);
+                    if (decisionRadio) { decisionRadio.checked = true; decisionRadio.dataset.wasChecked = 'true'; }
+                }
+                
+                for(let i=1; i<=4; i++) { if(d[`calibre-${i}`]) document.getElementById(`calibre-${i}`).value = d[`calibre-${i}`]; }
+                for(let i=1; i<=4; i++) {
+                    if(d[`ferm-${i}a`]) document.getElementById(`ferm-${i}a`).value = d[`ferm-${i}a`];
+                    if(d[`ferm-${i}b`]) document.getElementById(`ferm-${i}b`).value = d[`ferm-${i}b`];
+                }
+
+                if (photosStore[hybride.id]) {
+                    photoPlaceholder.style.display = 'none';
+                    photoPreview.src = photosStore[hybride.id];
+                    photoPreview.style.display = 'block';
+                }
+            } else {
+                document.getElementById('charge').value = 0;
+                document.getElementById('fente').value = 0;
+                document.getElementById('date-maturite').value = today;
+            }
+
+            updateSliderVisuals(document.getElementById('charge'), document.getElementById('val-charge'), couleursCharge);
+            toggleDependentFields(document.getElementById('charge').value);
+        }
+
+        document.getElementById('btn-back').addEventListener('click', () => {
+            returnToList(); 
+        });
+
+        document.getElementById('btn-reset-hybrid').addEventListener('click', () => {
+            const id = document.getElementById('hybrid-id').value;
+            if(confirm("Réinitialiser l'observation de cet hybride ?\n\nCela effacera la notation, la décision, le commentaire et la photo. Les statuts 🏷️ et ✂️ seront conservés.")) {
+                const previous = dataStore[id] || {};
+                const preservedStatus = {
+                    status: 'pending',
+                    tagMissing: !!previous.tagMissing,
+                    treeCut: !!(previous.treeCut || previous.status === 'cut')
+                };
+                delete photosStore[id];
+                if (preservedStatus.tagMissing || preservedStatus.treeCut) {
+                    dataStore[id] = preservedStatus;
+                } else {
+                    delete dataStore[id];
+                }
+                saveDataLocally().then(() => {
+                    renderList();
+                    showToast("Observation réinitialisée ✅");
+                    const hybride = hybridesInitiaux.find(h => h.id === id);
+                    if (hybride) openForm(hybride);
+                }); 
+            }
+        });
+
+        document.getElementById('phenotype-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('hybrid-id').value;
+            const decisionElement = document.querySelector('input[name="decision"]:checked');
+            const chargeVal = document.getElementById('charge').value;
+            let d = dataStore[id] || {};
+            const tagMissingVal = !!d.tagMissing;
+            const treeCutVal = !!(d.treeCut || d.status === 'cut');
+            
+            const notation = {
+                status: 'done',
+                tagMissing: tagMissingVal,
+                treeCut: treeCutVal, 
+                decision: decisionElement ? decisionElement.value : "",
+                date: parseInt(chargeVal) === 0 ? "" : document.getElementById('date-maturite').value,
+                charge: chargeVal,
+                fente: parseInt(chargeVal) === 0 ? "N/A" : document.getElementById('fente').value,
+                commentaire: document.getElementById('commentaire').value,
+            };
+
+            if (parseInt(chargeVal) !== 0) {
+                for(let i=1; i<=4; i++) { notation[`calibre-${i}`] = document.getElementById(`calibre-${i}`).value; }
+                for(let i=1; i<=4; i++) {
+                    notation[`ferm-${i}a`] = document.getElementById(`ferm-${i}a`).value;
+                    notation[`ferm-${i}b`] = document.getElementById(`ferm-${i}b`).value;
+                }
+            } else {
+                for(let i=1; i<=4; i++) { notation[`calibre-${i}`] = ""; }
+                for(let i=1; i<=4; i++) { notation[`ferm-${i}a`] = ""; notation[`ferm-${i}b`] = ""; }
+            }
+
+            if (parseInt(chargeVal) !== 0 && currentTempPhoto) {
+                photosStore[id] = currentTempPhoto;
+                notation.photoName = `${id}.jpg`;
+            } else {
+                if (parseInt(chargeVal) !== 0 && photosStore[id]) {
+                    notation.photoName = `${id}.jpg`;
+                } else if (parseInt(chargeVal) === 0) {
+                    delete photosStore[id];
+                    notation.photoName = "";
+                } else {
+                    notation.photoName = d.photoName || "";
+                }
+            }
+            
+            dataStore[id] = notation;
+            saveDataLocally().then(() => {
+                renderList();
+                showToast("Observation enregistrée ✅");
+                returnToList();
+            }); 
+        });
+
+        document.getElementById('btn-export').addEventListener('click', () => {
+            if (hybridesInitiaux.length === 0) {
+                alert("Aucune donnée à exporter. Veuillez d'abord importer un fichier.");
+                return;
+            }
+
+            const exportStats = hybridesInitiaux.reduce((acc, h) => {
+                const data = dataStore[h.id] || {};
+                if (data.status === 'done') acc.done++;
+                if (data.tagMissing) acc.tags++;
+                if (data.treeCut || data.status === 'cut') acc.cuts++;
+                if (photosStore[h.id] && data.charge !== "0" && data.charge !== 0) acc.photos++;
+                return acc;
+            }, { done: 0, tags: 0, cuts: 0, photos: 0 });
+
+            const exportMessage = `Export ZIP
+
+${hybridesInitiaux.length} hybrides
+${exportStats.done} évalués
+${exportStats.tags} étiquettes à refaire
+${exportStats.cuts} arbres coupés
+${exportStats.photos} photos
+
+Lancer l'export ?`;
+            if (!confirm(exportMessage)) return;
+
+            const zip = new JSZip();
+            const photoFolder = zip.folder("Photos_Phenotypage");
+            const excelData = [];
+            
+            hybridesInitiaux.forEach(h => {
+                const data = dataStore[h.id] || {}; 
+                
+                excelData.push({
+                    "DENOMINATIONS": h.croisement, 
+                    "RANG": h.rang,
+                    "ARBRE": h.arbre,
+                    "Statut": data.status === 'done' ? 'Évalué' : 'À faire',
+                    "Etiquette à refaire": data.tagMissing ? "OUI" : "NON",
+                    "Arbre coupé": (data.treeCut || data.status === 'cut') ? "OUI" : "NON", 
+                    "Décision": data.decision || "",
+                    "Date d'observation": data.date || "",
+                    "Charge": data.charge !== undefined ? data.charge : "",
+                    "Fente pistillaire": data.fente !== undefined ? data.fente : "",
+                    "Calibre F1": data["calibre-1"] || "",
+                    "Calibre F2": data["calibre-2"] || "",
+                    "Calibre F3": data["calibre-3"] || "",
+                    "Calibre F4": data["calibre-4"] || "",
+                    "Fermeté F1 Cuvette": data["ferm-1a"] || "",
+                    "Fermeté F1 Joue": data["ferm-1b"] || "",
+                    "Fermeté F2 Cuvette": data["ferm-2a"] || "",
+                    "Fermeté F2 Joue": data["ferm-2b"] || "",
+                    "Fermeté F3 Cuvette": data["ferm-3a"] || "",
+                    "Fermeté F3 Joue": data["ferm-3b"] || "",
+                    "Fermeté F4 Cuvette": data["ferm-4a"] || "",
+                    "Fermeté F4 Joue": data["ferm-4b"] || "",
+                    "Nom Photo": data.photoName || "",
+                    "Commentaire": data.commentaire || ""
+                });
+                
+                if (data.status === 'done' && photosStore[h.id] && data.charge !== "0" && data.charge !== 0) {
+                    const base64Data = photosStore[h.id].replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
+                    photoFolder.file(`${h.id}.jpg`, base64Data, {base64: true});
+                }
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Données complètes");
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            zip.file("Notations_Plate.xlsx", excelBuffer);
+
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, `Phenotypage_Local_${new Date().toISOString().split('T')[0]}.zip`);
+            });
+        });
+    </script>
+</body>
+</html>
