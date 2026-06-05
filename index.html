@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v11 - Local DB</title>
+    <title>Phénotypage v12 - Local DB</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -173,6 +173,13 @@
         .btn-reset { margin-top: 30px; background: transparent; color: var(--danger); font-size: 15px; text-decoration: underline; width: 100%; font-weight: normal;}
         
         #phenotype-form { padding-bottom: 60px; }
+        .status-options { display: flex; flex-direction: column; gap: 12px; }
+        .checkbox-row { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background-color: var(--bg-app); font-weight: 700; cursor: pointer; margin: 0; }
+        .checkbox-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); flex-shrink: 0; }
+        .checkbox-row span { font-size: 16px; }
+        .modal-status-options { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .modal-status-options .checkbox-row { background-color: var(--bg-app); }
+        .terrain-dependent-fields { transition: opacity 0.2s ease; }
     </style>
 </head>
 <body>
@@ -222,7 +229,7 @@
         <header>
             <button id="btn-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Retour</span></button>
             <h2 id="current-hybrid-title">Rang<br>Arbre</h2>
-            <button id="btn-cut" type="button" class="action-btn btn-coupe"><span class="icon">🗑</span><span>Coupé</span></button>
+            <button id="btn-reset-hybrid" type="button" class="action-btn btn-coupe"><span class="icon">🔄</span><span>Réinit.</span></button>
         </header>
         
         <div id="form-croisement" class="form-subtitle"></div>
@@ -232,19 +239,21 @@
             
             <div class="card">
                 <h3>📍 Notation terrain</h3>
-                <label>Date de maturité :</label>
-                <input type="date" id="date-maturite" required>
-
                 <label>Charge (0 à 3) : <span id="val-charge">0</span></label>
                 <div class="range-container">
                     <input type="range" id="charge" min="0" max="3" step="1" value="0">
                     <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
                 </div>
 
-                <label>Fente pistillaire (0 à 3) : <span id="val-fente">0</span></label>
-                <div class="range-container">
-                    <input type="range" id="fente" min="0" max="3" step="1" value="0">
-                    <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
+                <div id="terrain-dependent-fields" class="terrain-dependent-fields">
+                    <label>Date d'observation :</label>
+                    <input type="date" id="date-maturite" required>
+
+                    <label>Fente pistillaire (0 à 3) : <span id="val-fente">0</span></label>
+                    <div class="range-container">
+                        <input type="range" id="fente" min="0" max="3" step="1" value="0">
+                        <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -284,7 +293,7 @@
             <div class="card">
                 <h3>⚖️ Décision</h3>
                 <div class="decision-container">
-                    <label class="decision-btn eliminer"><input type="radio" name="decision" value="Eliminer" required><span>❌ Éliminer</span></label>
+                    <label class="decision-btn eliminer"><input type="radio" name="decision" value="Eliminer"><span>❌ Éliminer</span></label>
                     <label class="decision-btn poursuivre"><input type="radio" name="decision" value="Poursuivre"><span>➡️ Poursuivre</span></label>
                     <label class="decision-btn selectionner"><input type="radio" name="decision" value="Sélectionner"><span>✅ Sélectionner</span></label>
                 </div>
@@ -310,9 +319,12 @@
 
     <div id="tag-modal" class="modal-overlay">
         <div class="modal-content">
-            <h4>Étiquette à refaire ?</h4>
-            <button type="button" id="btn-tag-yes" class="modal-btn text-primary">Oui (Marquer)</button>
-            <button type="button" id="btn-tag-no" class="modal-btn text-danger">Non (Retirer marque)</button>
+            <h4>Statut de l'arbre</h4>
+            <div class="modal-status-options">
+                <label class="checkbox-row"><input type="checkbox" id="modal-tag-missing"><span>🏷️ Étiquette à refaire</span></label>
+                <label class="checkbox-row"><input type="checkbox" id="modal-tree-cut"><span>✂️ Arbre coupé</span></label>
+            </div>
+            <button type="button" id="btn-status-save" class="modal-btn text-primary">Enregistrer</button>
             <button type="button" id="btn-tag-cancel" class="modal-btn text-bold">Annuler</button>
         </div>
     </div>
@@ -407,9 +419,11 @@
             const fenteSlider = document.getElementById('fente');
             const valFente = document.getElementById('val-fente');
             const laboCard = document.getElementById('labo-card');
+            const terrainDependentFields = document.getElementById('terrain-dependent-fields');
             const today = new Date().toISOString().split('T')[0];
 
             if (parseInt(chargeVal) === 0) {
+                terrainDependentFields.style.display = 'none';
                 dateInput.disabled = true;
                 dateInput.required = false;
                 dateInput.value = "";
@@ -418,6 +432,7 @@
                 fenteSlider.style.background = "var(--border-color)"; 
                 laboCard.style.display = 'none';
             } else {
+                terrainDependentFields.style.display = 'block';
                 dateInput.disabled = false;
                 dateInput.required = true;
                 if (!dateInput.value) dateInput.value = today;
@@ -457,13 +472,8 @@
                     const cross = li.getAttribute('data-cross') ? li.getAttribute('data-cross').toLowerCase() : "";
                     const status = li.getAttribute('data-status');
                     
-                    if (status === 'cut') {
-                        li.style.display = 'none';
-                        return;
-                    }
-
                     let matchSearch = text.includes(term) || cross.includes(term);
-                    let matchFilter = filterActive ? (status === 'pending') : true;
+                    let matchFilter = filterActive ? (status === 'pending' || status === 'cut') : true;
 
                     if (matchSearch && matchFilter) {
                         li.style.display = 'flex';
@@ -496,8 +506,9 @@
                         if (cell === 'ARBRE') cols.arbre = j;
                         if (cell === 'STATUT') cols.statut = j;
                         if (cell === 'DÉCISION' || cell === 'DECISION') cols.decision = j;
-                        if (cell === 'ETIQUETTE À FAIRE' || cell === 'ETIQUETTE A FAIRE') cols.etiquette = j;
-                        if (cell === 'DATE DE MATURITÉ' || cell === 'DATE DE MATURITE') cols.date = j;
+                        if (cell === 'ETIQUETTE À FAIRE' || cell === 'ETIQUETTE A FAIRE' || cell === 'ETIQUETTE À REFAIRE' || cell === 'ETIQUETTE A REFAIRE') cols.etiquette = j;
+                        if (cell === 'ARBRE COUPÉ' || cell === 'ARBRE COUPE') cols.treeCut = j;
+                        if (cell === 'DATE DE MATURITÉ' || cell === 'DATE DE MATURITE' || cell === "DATE D'OBSERVATION" || cell === 'DATE D’OBSERVATION') cols.date = j;
                         if (cell === 'CHARGE') cols.charge = j;
                         if (cell === 'FENTE PISTILLAIRE') cols.fente = j;
                         if (cell === 'CALIBRE F1') cols.cal1 = j;
@@ -546,15 +557,19 @@
                         });
 
                         const isTagMissing = cols.etiquette !== undefined && String(row[cols.etiquette]).toUpperCase() === 'OUI';
+                        const statut = cols.statut !== undefined ? row[cols.statut] : '';
+                        const treeCutFromStatus = (statut === 'Coupé' || statut === 'Coupe');
+                        const isTreeCut = treeCutFromStatus || (cols.treeCut !== undefined && String(row[cols.treeCut]).toUpperCase() === 'OUI');
+                        const isDone = (statut === 'Évalué' || statut === 'Evalue');
+                        const hasImportedNotation = isDone || treeCutFromStatus || isTagMissing || isTreeCut ||
+                            (cols.decision !== undefined && row[cols.decision]) ||
+                            (cols.charge !== undefined && row[cols.charge] !== undefined && row[cols.charge] !== "");
 
-                        if (cols.statut !== undefined) {
-                            const statut = row[cols.statut];
-                            if (statut === 'Évalué' || statut === 'Evalue' || statut === 'Coupé' || statut === 'Coupe' || isTagMissing) {
-                                const isCut = (statut === 'Coupé' || statut === 'Coupe');
-                                const isDone = (statut === 'Évalué' || statut === 'Evalue');
+                        if (hasImportedNotation) {
                                 newDataStore[id] = {
-                                    status: isCut ? 'cut' : (isDone ? 'done' : 'pending'),
+                                    status: isDone ? 'done' : 'pending',
                                     tagMissing: isTagMissing,
+                                    treeCut: isTreeCut,
                                     decision: cols.decision !== undefined ? (row[cols.decision] || "") : "",
                                     date: cols.date !== undefined ? (row[cols.date] || "") : "",
                                     charge: cols.charge !== undefined && row[cols.charge] !== undefined ? row[cols.charge] : 0,
@@ -574,7 +589,6 @@
                                     commentaire: cols.com !== undefined ? (row[cols.com] || "") : "",
                                     photoName: cols.photoName !== undefined ? (row[cols.photoName] || "") : ""
                                 };
-                            }
                         }
                     }
                 }
@@ -610,10 +624,13 @@
             }).catch(err => console.warn("Erreur chargement localForage:", err));
 
             document.getElementById('btn-reset').addEventListener('click', () => {
-                if(confirm("ATTENTION : Cela va effacer toutes les notations et photos en mémoire sur cet appareil. Avez-vous bien exporté vos données en ZIP ?\n\nCliquez sur OK pour tout effacer.")) {
+                const confirmation = prompt("ATTENTION : Cela va effacer toutes les notations et photos en mémoire sur cet appareil. Avez-vous bien exporté vos données en ZIP ?\n\nPour tout effacer, tapez exactement : CONFIRMER");
+                if (confirmation === "CONFIRMER") {
                     localforage.clear().then(() => {
                         location.reload();
                     });
+                } else if (confirmation !== null) {
+                    alert("Suppression annulée : le texte saisi ne correspond pas à CONFIRMER.");
                 }
             });
 
@@ -768,22 +785,15 @@
             });
 
             const tagModal = document.getElementById('tag-modal');
+            const modalTagMissing = document.getElementById('modal-tag-missing');
+            const modalTreeCut = document.getElementById('modal-tree-cut');
             
-            document.getElementById('btn-tag-yes').addEventListener('click', () => {
+            document.getElementById('btn-status-save').addEventListener('click', () => {
                 tagModal.classList.remove('active');
                 if (currentTagHybridId) {
                     let d = dataStore[currentTagHybridId] || { status: 'pending' };
-                    d.tagMissing = true;
-                    dataStore[currentTagHybridId] = d;
-                    saveDataLocally().then(() => renderList());
-                }
-            });
-
-            document.getElementById('btn-tag-no').addEventListener('click', () => {
-                tagModal.classList.remove('active');
-                if (currentTagHybridId) {
-                    let d = dataStore[currentTagHybridId] || { status: 'pending' };
-                    d.tagMissing = false;
+                    d.tagMissing = modalTagMissing.checked;
+                    d.treeCut = modalTreeCut.checked;
                     dataStore[currentTagHybridId] = d;
                     saveDataLocally().then(() => renderList());
                 }
@@ -806,6 +816,21 @@
                 toggleDependentFields(chargeSlider.value);
             });
             fenteSlider.addEventListener('input', () => updateSliderVisuals(fenteSlider, valFente, couleursFente));
+
+            document.querySelectorAll('input[name="decision"]').forEach(radio => {
+                radio.addEventListener('pointerdown', function() {
+                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
+                });
+                radio.addEventListener('click', function() {
+                    if (this.dataset.wasChecked === 'true') {
+                        this.checked = false;
+                        this.dataset.wasChecked = 'false';
+                    }
+                    document.querySelectorAll('input[name="decision"]').forEach(other => {
+                        if (other !== this) other.dataset.wasChecked = 'false';
+                    });
+                });
+            });
 
             const labInputs = [
                 'calibre-1', 'calibre-2', 'calibre-3', 'calibre-4',
@@ -856,8 +881,10 @@
 
                 let etat = dataStore[h.id] ? dataStore[h.id].status : 'pending';
                 let tagMissing = dataStore[h.id] ? dataStore[h.id].tagMissing : false;
+                let treeCut = dataStore[h.id] ? (dataStore[h.id].treeCut || dataStore[h.id].status === 'cut') : false;
+                if (etat === 'cut') etat = 'pending';
                 
-                if (etat === 'done' || etat === 'cut') doneCount++;
+                if (etat === 'done') doneCount++;
 
                 let decisionClass = '';
                 let badge = '';
@@ -876,9 +903,10 @@
                 li.setAttribute('data-cross', h.croisement); 
                 li.setAttribute('data-status', etat); 
                 
-                let tagBadge = tagMissing ? `<span class="tag-indicator" title="Étiquette perdue">🏷️</span>` : ``;
+                let tagBadge = tagMissing ? `<span class="tag-indicator" title="Étiquette à refaire">🏷️</span>` : ``;
+                let cutBadge = treeCut ? `<span class="tag-indicator" title="Arbre coupé">✂️</span>` : ``;
                 
-                let contentHTML = `<div class="li-content"><span class="position-text">Rang ${h.rang} - Arbre ${h.arbre} ${tagBadge}</span></div>`;
+                let contentHTML = `<div class="li-content"><span class="position-text">Rang ${h.rang} - Arbre ${h.arbre} ${tagBadge} ${cutBadge}</span></div>`;
                 
                 if (etat === 'done') {
                     contentHTML += `<span>${badge}</span>`;
@@ -897,6 +925,9 @@
                         isLongPress = true;
                         if (navigator.vibrate) navigator.vibrate(50);
                         currentTagHybridId = h.id;
+                        const d = dataStore[h.id] || {};
+                        document.getElementById('modal-tag-missing').checked = !!d.tagMissing;
+                        document.getElementById('modal-tree-cut').checked = !!(d.treeCut || d.status === 'cut');
                         document.getElementById('tag-modal').classList.add('active');
                     }, 500); 
                 }, {passive: true});
@@ -953,7 +984,7 @@
             
             updateSliderVisuals(document.getElementById('charge'), document.getElementById('val-charge'), couleursCharge);
             updateSliderVisuals(document.getElementById('fente'), document.getElementById('val-fente'), couleursFente);
-            document.querySelectorAll('input[name="decision"]').forEach(radio => radio.checked = false);
+            document.querySelectorAll('input[name="decision"]').forEach(radio => { radio.checked = false; radio.dataset.wasChecked = 'false'; });
             
             document.getElementById('photo-input').value = "";
             const photoPlaceholder = document.getElementById('photo-placeholder');
@@ -965,9 +996,8 @@
 
             const today = new Date().toISOString().split('T')[0];
 
-            if(dataStore[hybride.id] && dataStore[hybride.id].status !== 'cut') {
+            if(dataStore[hybride.id]) {
                 const d = dataStore[hybride.id];
-                
                 document.getElementById('charge').value = d.charge !== undefined ? d.charge : 0;
                 document.getElementById('fente').value = (d.fente !== undefined && d.fente !== "N/A") ? d.fente : 0;
                 document.getElementById('date-maturite').value = d.date || "";
@@ -975,7 +1005,7 @@
                 
                 if (d.decision) {
                     const decisionRadio = document.querySelector(`input[name="decision"][value="${d.decision}"]`);
-                    if (decisionRadio) decisionRadio.checked = true;
+                    if (decisionRadio) { decisionRadio.checked = true; decisionRadio.dataset.wasChecked = 'true'; }
                 }
                 
                 for(let i=1; i<=4; i++) { if(d[`calibre-${i}`]) document.getElementById(`calibre-${i}`).value = d[`calibre-${i}`]; }
@@ -1003,15 +1033,25 @@
             returnToList(); 
         });
 
-        document.getElementById('btn-cut').addEventListener('click', () => {
+        document.getElementById('btn-reset-hybrid').addEventListener('click', () => {
             const id = document.getElementById('hybrid-id').value;
-            if(confirm("Êtes-vous sûr de vouloir masquer cet arbre (coupé) ?")) {
-                let d = dataStore[id] || {};
-                d.status = 'cut';
-                dataStore[id] = d;
+            if(confirm("Réinitialiser l'observation de cet hybride ?\n\nCela effacera la notation, la décision, le commentaire et la photo. Les statuts 🏷️ et ✂️ seront conservés.")) {
+                const previous = dataStore[id] || {};
+                const preservedStatus = {
+                    status: 'pending',
+                    tagMissing: !!previous.tagMissing,
+                    treeCut: !!(previous.treeCut || previous.status === 'cut')
+                };
+                delete photosStore[id];
+                if (preservedStatus.tagMissing || preservedStatus.treeCut) {
+                    dataStore[id] = preservedStatus;
+                } else {
+                    delete dataStore[id];
+                }
                 saveDataLocally().then(() => {
                     renderList();
-                    returnToList();
+                    const hybride = hybridesInitiaux.find(h => h.id === id);
+                    if (hybride) openForm(hybride);
                 }); 
             }
         });
@@ -1021,12 +1061,14 @@
             const id = document.getElementById('hybrid-id').value;
             const decisionElement = document.querySelector('input[name="decision"]:checked');
             const chargeVal = document.getElementById('charge').value;
-            
             let d = dataStore[id] || {};
+            const tagMissingVal = !!d.tagMissing;
+            const treeCutVal = !!(d.treeCut || d.status === 'cut');
             
             const notation = {
                 status: 'done',
-                tagMissing: d.tagMissing || false, 
+                tagMissing: tagMissingVal,
+                treeCut: treeCutVal, 
                 decision: decisionElement ? decisionElement.value : "",
                 date: parseInt(chargeVal) === 0 ? "" : document.getElementById('date-maturite').value,
                 charge: chargeVal,
@@ -1083,10 +1125,11 @@
                     "DENOMINATIONS": h.croisement, 
                     "RANG": h.rang,
                     "ARBRE": h.arbre,
-                    "Statut": data.status === 'cut' ? 'Coupé' : (data.status === 'done' ? 'Évalué' : 'À faire'),
-                    "Etiquette à faire": data.tagMissing ? "OUI" : "NON", 
+                    "Statut": data.status === 'done' ? 'Évalué' : 'À faire',
+                    "Etiquette à refaire": data.tagMissing ? "OUI" : "NON",
+                    "Arbre coupé": (data.treeCut || data.status === 'cut') ? "OUI" : "NON", 
                     "Décision": data.decision || "",
-                    "Date de maturité": data.date || "",
+                    "Date d'observation": data.date || "",
                     "Charge": data.charge !== undefined ? data.charge : "",
                     "Fente pistillaire": data.fente !== undefined ? data.fente : "",
                     "Calibre F1": data["calibre-1"] || "",
