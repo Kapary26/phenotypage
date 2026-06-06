@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v17 - Ergonomie liste</title>
+    <title>Phénotypage v21 - Correctifs ergonomie</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -671,6 +671,249 @@
                 border-bottom-color: rgba(10,132,255,0.45) !important;
             }
         }
+
+
+        /* ===== Mise à jour v20 : logique terrain, sauvegardes et qualité export ===== */
+        .home-meta-line {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 750;
+            margin-top: -7px;
+            margin-bottom: 3px;
+            text-align: center;
+        }
+
+        .observation-dependent-fields,
+        .terrain-dependent-fields {
+            transition: opacity 0.18s ease;
+        }
+
+        .photo-help {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.35;
+            background: var(--bg-app);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin: 0 0 14px 0;
+        }
+
+        .last-modified-line {
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            margin: -8px auto 16px auto;
+        }
+
+        .sticky-btn:disabled,
+        button:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: none !important;
+        }
+
+
+
+        /* ===== v20 - Harmonisation en-têtes et curseurs dynamiques ===== */
+        :root {
+            --range-track-bg: #e5e5ea;
+            --range-track-bg-dark: #3a3a3c;
+        }
+
+        #view-form header,
+        #view-stats .stats-header {
+            padding: 10px 0 10px 0;
+            margin-top: -15px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.035);
+        }
+
+        #view-form header .action-btn,
+        #view-stats .stats-header .action-btn {
+            width: 62px;
+            height: 48px;
+            min-height: 48px;
+            border-radius: 15px;
+            font-size: 11px;
+            gap: 2px;
+            padding: 4px;
+        }
+
+        #view-form header .action-btn .icon,
+        #view-stats .stats-header .action-btn .icon {
+            font-size: 18px;
+        }
+
+        #view-form header h2,
+        #view-stats .stats-header h1 {
+            font-size: 21px;
+            line-height: 1.1;
+        }
+
+        #view-form .form-subtitle {
+            margin-top: -5px;
+            margin-bottom: 14px;
+        }
+
+        .slider-value-static {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .range-container-dynamic {
+            margin: 28px 0 18px 0;
+            padding-top: 6px;
+        }
+
+        .range-container-dynamic input[type="range"] {
+            height: 12px;
+            border-radius: 999px;
+            background: var(--range-track-bg);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.12);
+        }
+
+        .range-container-dynamic input[type="range"]::-webkit-slider-thumb {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.26), 0 0 0 1px rgba(0,0,0,0.06);
+        }
+
+        .range-container-dynamic input[type="range"]:disabled {
+            opacity: 0.55;
+            background: var(--range-track-bg) !important;
+        }
+
+        .range-bubble {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            transform: translateX(-50%) translateY(5px);
+            opacity: 0;
+            pointer-events: none;
+            background: var(--text-main);
+            color: var(--bg-card);
+            min-width: 34px;
+            height: 28px;
+            padding: 0 9px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 850;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.20);
+            transition: opacity 0.16s ease, transform 0.16s ease;
+            z-index: 3;
+        }
+
+        .range-bubble::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 7px solid var(--text-main);
+        }
+
+        .range-container-dynamic.is-sliding .range-bubble {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .range-ticks { display: none !important; }
+
+        @media (prefers-color-scheme: dark) {
+            .range-container-dynamic input[type="range"] {
+                background: var(--range-track-bg-dark);
+                box-shadow: inset 0 1px 2px rgba(0,0,0,0.35);
+            }
+            .range-container-dynamic input[type="range"]:disabled {
+                background: var(--range-track-bg-dark) !important;
+            }
+            .range-bubble {
+                background: #f2f2f7;
+                color: #1c1c1e;
+            }
+            .range-bubble::after { border-top-color: #f2f2f7; }
+        }
+
+
+
+        /* ===== v21 - Correctifs en-têtes collants et libellés curseurs ===== */
+        #view-form header,
+        #view-stats .stats-header {
+            top: 0 !important;
+            margin-top: 0 !important;
+            padding: 6px 0 8px 0 !important;
+            margin-bottom: 14px !important;
+            background-color: var(--bg-app) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            border-radius: 0 0 18px 18px !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.035) !important;
+            overflow: visible !important;
+        }
+
+        #view-form header .action-btn,
+        #view-stats .stats-header .action-btn {
+            width: 62px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            border-radius: 15px !important;
+            font-size: 11px !important;
+            gap: 2px !important;
+            padding: 4px !important;
+        }
+
+        #view-form header .action-btn .icon,
+        #view-stats .stats-header .action-btn .icon {
+            font-size: 18px !important;
+        }
+
+        #view-form header h2,
+        #view-stats .stats-header h1 {
+            font-size: 21px !important;
+            line-height: 1.1 !important;
+        }
+
+        #view-form .slider-value-static {
+            position: static !important;
+            width: auto !important;
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            clip: auto !important;
+            white-space: normal !important;
+            border: 0 !important;
+            color: var(--primary) !important;
+            font-weight: 850 !important;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #view-form header,
+            #view-stats .stats-header {
+                background-color: var(--bg-app) !important;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.45) !important;
+            }
+        }
+
 </style>
 </head>
 <body>
@@ -684,7 +927,9 @@
                 <input type="file" id="file-import" accept=".zip, .xlsx, .xls, .csv" style="display: none;">
                 <button id="btn-import" class="btn-secondary btn-large">📥 Importer (.zip ou Excel)</button>
                 <button id="btn-export" class="btn-primary btn-large">📦 Exporter Données (.zip)</button>
+                <div id="last-export-info" class="home-meta-line">📦 Dernier export : jamais</div>
                 <button id="btn-go-list" class="btn-success btn-large" style="display: none;">📋 Accéder aux arbres</button>
+                <div id="last-save-info" class="home-meta-line">💾 Dernière sauvegarde locale : jamais</div>
                 
                 <button id="btn-reset" class="btn-reset">⚠️ Nouvelle saison (Tout effacer)</button>
             </div>
@@ -750,22 +995,26 @@
         <form id="phenotype-form">
             <input type="hidden" id="hybrid-id">
             
+            <div id="last-modified-line" class="last-modified-line"></div>
+
             <div class="card">
                 <h3>📍 Notation terrain</h3>
-                <label>Charge (0 à 3) : <span id="val-charge">0</span></label>
-                <div class="range-container">
-                    <input type="range" id="charge" min="0" max="3" step="1" value="0">
-                    <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
-                </div>
+                <label>Date d'observation :</label>
+                <input type="date" id="date-maturite" required>
 
-                <div id="terrain-dependent-fields" class="terrain-dependent-fields">
-                    <label>Date d'observation :</label>
-                    <input type="date" id="date-maturite" required>
+                <div id="observation-dependent-fields" class="observation-dependent-fields">
+                    <label>Charge (0 à 3) : <span id="val-charge" class="slider-value-static">0</span></label>
+                    <div class="range-container range-container-dynamic">
+                        <div class="range-bubble" id="bubble-charge">0</div>
+                        <input type="range" id="charge" min="0" max="3" step="1" value="0" aria-label="Charge">
+                    </div>
 
-                    <label>Fente pistillaire (0 à 3) : <span id="val-fente">0</span></label>
-                    <div class="range-container">
-                        <input type="range" id="fente" min="0" max="3" step="1" value="0">
-                        <div class="range-ticks"><span>0</span><span>1</span><span>2</span><span>3</span></div>
+                    <div id="terrain-dependent-fields" class="terrain-dependent-fields">
+                        <label>Fente pistillaire (0 à 3) : <span id="val-fente" class="slider-value-static">0</span></label>
+                        <div class="range-container range-container-dynamic">
+                            <div class="range-bubble" id="bubble-fente">0</div>
+                            <input type="range" id="fente" min="0" max="3" step="1" value="0" aria-label="Fente pistillaire">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -774,6 +1023,7 @@
                 <h3>🔬 Notation laboratoire</h3>
                 
                 <label>Photo des fruits :</label>
+                <div class="photo-help">📷 Conseil photo : placez 6 fruits côte à côte sur une feuille blanche mate. Gardez le même cadrage et évitez les ombres fortes.</div>
                 <div class="photo-container">
                     <div class="photo-upload-box" id="photo-box">
                         <div id="photo-placeholder" class="photo-placeholder">
@@ -803,7 +1053,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" id="decision-card">
                 <h3>⚖️ Décision</h3>
                 <div class="decision-container">
                     <label class="decision-btn eliminer"><input type="radio" name="decision" value="Eliminer"><span>❌ Éliminer</span></label>
@@ -812,12 +1062,12 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" id="comment-card">
                 <h3>💬 Commentaires</h3>
                 <textarea id="commentaire" rows="3" placeholder="Observations spécifiques sur l'arbre ou les fruits..."></textarea>
             </div>
 
-            <button type="submit" class="btn-success sticky-btn">Enregistrer l'hybride</button>
+            <button id="btn-save-hybrid" type="submit" class="btn-success sticky-btn">Enregistrer l'hybride</button>
         </form>
     </div>
 
@@ -860,6 +1110,8 @@
         let filterMode = 'all'; 
         let currentTagHybridId = null; 
         let currentTempPhoto = null;
+        let lastLocalSaveAt = null;
+        let lastExportAt = null;
 
         function sortHybrids(hybrids) {
             const croisementMinRang = {};
@@ -908,12 +1160,39 @@
         // Sauvegarde asynchrone dans IndexedDB via localForage
         async function saveDataLocally() {
             try {
+                lastLocalSaveAt = new Date().toISOString();
                 await localforage.setItem('hybridesList', hybridesInitiaux);
                 await localforage.setItem('phenotypeData', dataStore);
                 await localforage.setItem('photosData', photosStore);
+                await localforage.setItem('lastLocalSaveAt', lastLocalSaveAt);
+                updateHomeBackupInfo();
             } catch (err) {
                 console.error("Erreur de sauvegarde locale:", err);
             }
+        }
+
+        function formatDateTimeForDisplay(value) {
+            if (!value) return 'jamais';
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return String(value);
+            return d.toLocaleString('fr-FR', {
+                day: 'numeric', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function updateHomeBackupInfo() {
+            const saveEl = document.getElementById('last-save-info');
+            const exportEl = document.getElementById('last-export-info');
+            if (saveEl) saveEl.textContent = `💾 Dernière sauvegarde locale : ${formatDateTimeForDisplay(lastLocalSaveAt)}`;
+            if (exportEl) exportEl.textContent = `📦 Dernier export : ${formatDateTimeForDisplay(lastExportAt)}`;
+        }
+
+        function normalizeSearchText(value) {
+            return String(value || '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]/g, '');
         }
 
         const couleursCharge = ['#e74c3c', '#e67e22', '#f1c40f', '#27ae60'];
@@ -1189,9 +1468,58 @@
         }
 
         function updateSliderVisuals(sliderEl, displayEl, palette) {
+            if (!sliderEl) return;
             const val = parseInt(sliderEl.value);
-            displayEl.textContent = val;
-            sliderEl.style.background = palette[val];
+            if (displayEl) displayEl.textContent = val;
+            const min = parseFloat(sliderEl.min || 0);
+            const max = parseFloat(sliderEl.max || 100);
+            const pct = max === min ? 0 : ((val - min) / (max - min)) * 100;
+            const color = palette[val] || 'var(--primary)';
+            const neutral = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'var(--range-track-bg-dark)' : 'var(--range-track-bg)';
+            sliderEl.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, ${neutral} ${pct}%, ${neutral} 100%)`;
+            updateSliderBubble(sliderEl, val, pct);
+        }
+
+        function updateSliderBubble(sliderEl, val, pct) {
+            const container = sliderEl ? sliderEl.closest('.range-container-dynamic') : null;
+            if (!container) return;
+            const bubble = container.querySelector('.range-bubble');
+            if (!bubble) return;
+            const clampedPct = Math.max(0, Math.min(100, pct));
+            bubble.textContent = val;
+            bubble.style.left = `${clampedPct}%`;
+        }
+
+        function showSliderBubble(sliderEl) {
+            const container = sliderEl ? sliderEl.closest('.range-container-dynamic') : null;
+            if (!container) return;
+            clearTimeout(container._bubbleTimer);
+            container.classList.add('is-sliding');
+        }
+
+        function hideSliderBubble(sliderEl) {
+            const container = sliderEl ? sliderEl.closest('.range-container-dynamic') : null;
+            if (!container) return;
+            clearTimeout(container._bubbleTimer);
+            container._bubbleTimer = setTimeout(() => container.classList.remove('is-sliding'), 700);
+        }
+
+        function initDynamicSlider(sliderEl, displayEl, palette, onInputExtra) {
+            if (!sliderEl) return;
+            const refresh = () => {
+                updateSliderVisuals(sliderEl, displayEl, palette);
+                if (typeof onInputExtra === 'function') onInputExtra();
+            };
+            sliderEl.addEventListener('pointerdown', () => { showSliderBubble(sliderEl); refresh(); });
+            sliderEl.addEventListener('pointerup', () => hideSliderBubble(sliderEl));
+            sliderEl.addEventListener('pointercancel', () => hideSliderBubble(sliderEl));
+            sliderEl.addEventListener('touchstart', () => { showSliderBubble(sliderEl); refresh(); }, {passive: true});
+            sliderEl.addEventListener('touchend', () => hideSliderBubble(sliderEl), {passive: true});
+            sliderEl.addEventListener('mousedown', () => { showSliderBubble(sliderEl); refresh(); });
+            sliderEl.addEventListener('mouseup', () => hideSliderBubble(sliderEl));
+            sliderEl.addEventListener('focus', () => showSliderBubble(sliderEl));
+            sliderEl.addEventListener('blur', () => hideSliderBubble(sliderEl));
+            sliderEl.addEventListener('input', () => { showSliderBubble(sliderEl); refresh(); });
         }
 
         function toggleDependentFields(chargeVal) {
@@ -1200,25 +1528,38 @@
             const valFente = document.getElementById('val-fente');
             const laboCard = document.getElementById('labo-card');
             const terrainDependentFields = document.getElementById('terrain-dependent-fields');
-            const today = new Date().toISOString().split('T')[0];
+            const observationDependentFields = document.getElementById('observation-dependent-fields');
+            const decisionCard = document.getElementById('decision-card');
+            const commentCard = document.getElementById('comment-card');
+            const hasDate = !!(dateInput && dateInput.value);
 
-            if (parseInt(chargeVal) === 0) {
-                terrainDependentFields.style.display = 'none';
-                dateInput.disabled = true;
-                dateInput.required = false;
-                dateInput.value = "";
+            if (!hasDate) {
+                if (observationDependentFields) observationDependentFields.style.display = 'none';
+                if (decisionCard) decisionCard.style.display = 'none';
+                if (commentCard) commentCard.style.display = 'none';
+                if (terrainDependentFields) terrainDependentFields.style.display = 'none';
+                if (laboCard) laboCard.style.display = 'none';
                 fenteSlider.disabled = true;
                 valFente.textContent = "N/A";
-                fenteSlider.style.background = "var(--border-color)"; 
-                laboCard.style.display = 'none';
+                updateSliderVisuals(fenteSlider, valFente, couleursFente);
+                return;
+            }
+
+            if (observationDependentFields) observationDependentFields.style.display = 'block';
+            if (decisionCard) decisionCard.style.display = 'block';
+            if (commentCard) commentCard.style.display = 'block';
+
+            if (parseInt(chargeVal) === 0) {
+                if (terrainDependentFields) terrainDependentFields.style.display = 'none';
+                fenteSlider.disabled = true;
+                valFente.textContent = "N/A";
+                updateSliderVisuals(fenteSlider, valFente, couleursFente);
+                if (laboCard) laboCard.style.display = 'none';
             } else {
-                terrainDependentFields.style.display = 'block';
-                dateInput.disabled = false;
-                dateInput.required = true;
-                if (!dateInput.value) dateInput.value = today;
+                if (terrainDependentFields) terrainDependentFields.style.display = 'block';
                 fenteSlider.disabled = false;
                 updateSliderVisuals(fenteSlider, valFente, couleursFente);
-                laboCard.style.display = 'block';
+                if (laboCard) laboCard.style.display = 'block';
             }
         }
 
@@ -1237,7 +1578,8 @@
         }
 
         function applyFilters() {
-            const term = document.getElementById('search-input').value.toLowerCase();
+            const rawTerm = document.getElementById('search-input').value;
+            const term = normalizeSearchText(rawTerm);
             const items = document.querySelectorAll('#hybrids-list li');
             let currentHeader = null;
             let headerHasVisibleItems = false;
@@ -1248,14 +1590,16 @@
                     currentHeader = li;
                     headerHasVisibleItems = false;
                 } else if (li.classList.contains('hybrid-item')) {
-                    const text = li.textContent.toLowerCase();
-                    const cross = li.getAttribute('data-cross') ? li.getAttribute('data-cross').toLowerCase() : "";
+                    const text = li.textContent || '';
+                    const cross = li.getAttribute('data-cross') || "";
+                    const searchData = li.getAttribute('data-search') || '';
+                    const haystack = normalizeSearchText(`${text} ${cross} ${searchData}`);
                     const status = li.getAttribute('data-status');
                     const tagMissing = li.getAttribute('data-tag') === 'true';
                     const treeCut = li.getAttribute('data-cut') === 'true';
                     const decision = li.getAttribute('data-decision') || '';
                     
-                    let matchSearch = text.includes(term) || cross.includes(term);
+                    let matchSearch = !term || haystack.includes(term);
                     let matchFilter = true;
 
                     if (filterMode === 'pending') matchFilter = status === 'pending';
@@ -1316,6 +1660,7 @@
                         if (cell === 'FERMETÉ F4 JOUE' || cell === 'FERMETE F4 JOUE') cols.f4b = j;
                         if (cell === 'COMMENTAIRE') cols.com = j;
                         if (cell === 'NOM PHOTO') cols.photoName = j;
+                        if (cell === 'DERNIÈRE MODIFICATION' || cell === 'DERNIERE MODIFICATION') cols.updatedAt = j;
                     }
                     if (cols.rang !== undefined && cols.arbre !== undefined) {
                         headerRowIndex = i;
@@ -1378,7 +1723,8 @@
                                     "ferm-4a": cols.f4a !== undefined ? (row[cols.f4a] || "") : "",
                                     "ferm-4b": cols.f4b !== undefined ? (row[cols.f4b] || "") : "",
                                     commentaire: cols.com !== undefined ? (row[cols.com] || "") : "",
-                                    photoName: cols.photoName !== undefined ? (row[cols.photoName] || "") : ""
+                                    photoName: cols.photoName !== undefined ? (row[cols.photoName] || "") : "",
+                                    updatedAt: cols.updatedAt !== undefined ? (row[cols.updatedAt] || "") : ""
                                 };
                         }
                     }
@@ -1402,11 +1748,16 @@
             Promise.all([
                 localforage.getItem('hybridesList'),
                 localforage.getItem('phenotypeData'),
-                localforage.getItem('photosData')
-            ]).then(([hybrids, data, photos]) => {
+                localforage.getItem('photosData'),
+                localforage.getItem('lastLocalSaveAt'),
+                localforage.getItem('lastExportAt')
+            ]).then(([hybrids, data, photos, savedAt, exportedAt]) => {
                 hybridesInitiaux = hybrids || [];
                 dataStore = data || {};
                 photosStore = photos || {};
+                lastLocalSaveAt = savedAt || null;
+                lastExportAt = exportedAt || null;
+                updateHomeBackupInfo();
                 
                 if (hybridesInitiaux.length > 0) {
                     document.getElementById('btn-go-list').style.display = 'block';
@@ -1546,6 +1897,7 @@
                 }
                 if(dataStore[currentId]) {
                     dataStore[currentId].photoName = "";
+                    dataStore[currentId].updatedAt = new Date().toISOString();
                 }
                 saveDataLocally();
             });
@@ -1596,6 +1948,7 @@
                     let d = dataStore[currentTagHybridId] || { status: 'pending' };
                     d.tagMissing = modalTagMissing.checked;
                     d.treeCut = modalTreeCut.checked;
+                    d.updatedAt = new Date().toISOString();
                     dataStore[currentTagHybridId] = d;
                     saveDataLocally().then(() => {
                         renderList();
@@ -1616,11 +1969,10 @@
             updateSliderVisuals(chargeSlider, valCharge, couleursCharge);
             updateSliderVisuals(fenteSlider, valFente, couleursFente);
 
-            chargeSlider.addEventListener('input', () => {
-                updateSliderVisuals(chargeSlider, valCharge, couleursCharge);
-                toggleDependentFields(chargeSlider.value);
-            });
-            fenteSlider.addEventListener('input', () => updateSliderVisuals(fenteSlider, valFente, couleursFente));
+            initDynamicSlider(chargeSlider, valCharge, couleursCharge, () => toggleDependentFields(chargeSlider.value));
+            document.getElementById('date-maturite').addEventListener('input', () => toggleDependentFields(chargeSlider.value));
+            document.getElementById('date-maturite').addEventListener('change', () => toggleDependentFields(chargeSlider.value));
+            initDynamicSlider(fenteSlider, valFente, couleursFente);
 
             // Décisions désélectionnables : comportement fiable sur iPhone/Safari.
             // Un clic sélectionne la décision ; un second clic sur la même décision la retire.
@@ -1718,7 +2070,16 @@
                 li.setAttribute('data-status', etat);
                 li.setAttribute('data-tag', tagMissing ? 'true' : 'false');
                 li.setAttribute('data-cut', treeCut ? 'true' : 'false');
-                li.setAttribute('data-decision', dataStore[h.id] && dataStore[h.id].decision ? dataStore[h.id].decision : ''); 
+                li.setAttribute('data-decision', dataStore[h.id] && dataStore[h.id].decision ? dataStore[h.id].decision : '');
+                const searchVariants = [
+                    `R${h.rang}A${h.arbre}`,
+                    `R${h.rang} A${h.arbre}`,
+                    `R${h.rang}-A${h.arbre}`,
+                    `${h.rang}-${h.arbre}`,
+                    `${h.rang} ${h.arbre}`,
+                    `Rang ${h.rang} Arbre ${h.arbre}`
+                ].join(' ');
+                li.setAttribute('data-search', searchVariants); 
                 
                 let tagBadge = tagMissing ? `<span class="tag-indicator" title="Étiquette à refaire">🏷️</span>` : ``;
                 let cutBadge = treeCut ? `<span class="tag-indicator" title="Arbre coupé">✂️</span>` : ``;
@@ -1811,6 +2172,10 @@
             if (statusData.tagMissing) statusBadges.push('<span class="status-pill">🏷️ Étiquette à refaire</span>');
             if (statusData.treeCut || statusData.status === 'cut') statusBadges.push('<span class="status-pill cut">✂️ Arbre coupé</span>');
             formStatusBadges.innerHTML = statusBadges.join('');
+            const lastModifiedEl = document.getElementById('last-modified-line');
+            if (lastModifiedEl) {
+                lastModifiedEl.textContent = statusData.updatedAt ? `Dernière modification : ${formatDateTimeForDisplay(statusData.updatedAt)}` : '';
+            }
             document.getElementById('hybrid-id').value = hybride.id;
             
             document.getElementById('phenotype-form').reset();
@@ -1827,7 +2192,7 @@
             photoPreview.style.display = 'none';
             photoPreview.src = '';
 
-            const today = new Date().toISOString().split('T')[0];
+            
 
             if(dataStore[hybride.id]) {
                 const d = dataStore[hybride.id];
@@ -1855,11 +2220,12 @@
             } else {
                 document.getElementById('charge').value = 0;
                 document.getElementById('fente').value = 0;
-                document.getElementById('date-maturite').value = today;
+                document.getElementById('date-maturite').value = "";
             }
 
             updateSliderVisuals(document.getElementById('charge'), document.getElementById('val-charge'), couleursCharge);
             toggleDependentFields(document.getElementById('charge').value);
+            updateSliderVisuals(document.getElementById('fente'), document.getElementById('val-fente'), couleursFente);
         }
 
         document.getElementById('btn-back').addEventListener('click', () => {
@@ -1873,7 +2239,8 @@
                 const preservedStatus = {
                     status: 'pending',
                     tagMissing: !!previous.tagMissing,
-                    treeCut: !!(previous.treeCut || previous.status === 'cut')
+                    treeCut: !!(previous.treeCut || previous.status === 'cut'),
+                    updatedAt: new Date().toISOString()
                 };
                 delete photosStore[id];
                 if (preservedStatus.tagMissing || preservedStatus.treeCut) {
@@ -1892,22 +2259,32 @@
 
         document.getElementById('phenotype-form').addEventListener('submit', (e) => {
             e.preventDefault();
+            const saveBtn = document.getElementById('btn-save-hybrid');
+            if (saveBtn && saveBtn.disabled) return;
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Enregistrement...';
+            }
+
             const id = document.getElementById('hybrid-id').value;
             const decisionElement = document.querySelector('input[name="decision"]:checked');
             const chargeVal = document.getElementById('charge').value;
+            const dateVal = document.getElementById('date-maturite').value;
             let d = dataStore[id] || {};
             const tagMissingVal = !!d.tagMissing;
             const treeCutVal = !!(d.treeCut || d.status === 'cut');
+            const updatedAt = new Date().toISOString();
             
             const notation = {
                 status: 'done',
                 tagMissing: tagMissingVal,
                 treeCut: treeCutVal, 
                 decision: decisionElement ? decisionElement.value : "",
-                date: parseInt(chargeVal) === 0 ? "" : document.getElementById('date-maturite').value,
+                date: dateVal,
                 charge: chargeVal,
                 fente: parseInt(chargeVal) === 0 ? "N/A" : document.getElementById('fente').value,
                 commentaire: document.getElementById('commentaire').value,
+                updatedAt: updatedAt
             };
 
             if (parseInt(chargeVal) !== 0) {
@@ -1940,6 +2317,11 @@
                 renderList();
                 showToast("Observation enregistrée ✅");
                 returnToList();
+            }).finally(() => {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Enregistrer l'hybride";
+                }
             }); 
         });
 
@@ -1951,12 +2333,30 @@
 
             const exportStats = hybridesInitiaux.reduce((acc, h) => {
                 const data = dataStore[h.id] || {};
+                const chargeVal = safeNumber(data.charge);
+                const fenteVal = safeNumber(data.fente);
                 if (data.status === 'done') acc.done++;
                 if (data.tagMissing) acc.tags++;
                 if (data.treeCut || data.status === 'cut') acc.cuts++;
                 if (photosStore[h.id] && data.charge !== "0" && data.charge !== 0) acc.photos++;
+                if (data.status === 'done' && !data.date) acc.noDate++;
+                if (data.date && !data.decision) acc.noDecision++;
+                if (chargeVal !== null && chargeVal > 0 && fenteVal === null) acc.noFente++;
+                if (chargeVal !== null && chargeVal > 0 && !photosStore[h.id]) acc.noPhoto++;
+                if (data.decision === 'Sélectionner' && chargeVal === 0) acc.selectedCharge0++;
+                if (data.decision === 'Sélectionner' && fenteVal !== null && fenteVal >= 2) acc.selectedHighFente++;
+                if ((data.treeCut || data.status === 'cut') && data.decision === 'Sélectionner') acc.cutSelected++;
                 return acc;
-            }, { done: 0, tags: 0, cuts: 0, photos: 0 });
+            }, { done: 0, tags: 0, cuts: 0, photos: 0, noDate: 0, noDecision: 0, noFente: 0, noPhoto: 0, selectedCharge0: 0, selectedHighFente: 0, cutSelected: 0 });
+
+            const warnings = [];
+            if (exportStats.noDate) warnings.push(`${exportStats.noDate} hybrides évalués sans date d'observation`);
+            if (exportStats.noDecision) warnings.push(`${exportStats.noDecision} hybrides avec date mais sans décision`);
+            if (exportStats.noFente) warnings.push(`${exportStats.noFente} hybrides avec charge > 0 sans fente`);
+            if (exportStats.noPhoto) warnings.push(`${exportStats.noPhoto} hybrides avec charge > 0 sans photo`);
+            if (exportStats.selectedCharge0) warnings.push(`${exportStats.selectedCharge0} hybrides sélectionnés avec charge 0`);
+            if (exportStats.selectedHighFente) warnings.push(`${exportStats.selectedHighFente} hybrides sélectionnés avec fente ≥ 2`);
+            if (exportStats.cutSelected) warnings.push(`${exportStats.cutSelected} arbres coupés avec décision Sélectionner`);
 
             const exportMessage = `Export ZIP
 
@@ -1966,7 +2366,7 @@ ${exportStats.tags} étiquettes à refaire
 ${exportStats.cuts} arbres coupés
 ${exportStats.photos} photos
 
-Lancer l'export ?`;
+${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n' : ''}Lancer l'export ?`;
             if (!confirm(exportMessage)) return;
 
             const zip = new JSZip();
@@ -2000,7 +2400,8 @@ Lancer l'export ?`;
                     "Fermeté F4 Cuvette": data["ferm-4a"] || "",
                     "Fermeté F4 Joue": data["ferm-4b"] || "",
                     "Nom Photo": data.photoName || "",
-                    "Commentaire": data.commentaire || ""
+                    "Commentaire": data.commentaire || "",
+                    "Dernière modification": data.updatedAt ? formatDateTimeForDisplay(data.updatedAt) : ""
                 });
                 
                 if (data.status === 'done' && photosStore[h.id] && data.charge !== "0" && data.charge !== 0) {
@@ -2017,6 +2418,9 @@ Lancer l'export ?`;
 
             zip.generateAsync({type:"blob"}).then(function(content) {
                 saveAs(content, `Phenotypage_Local_${new Date().toISOString().split('T')[0]}.zip`);
+                lastExportAt = new Date().toISOString();
+                localforage.setItem('lastExportAt', lastExportAt).then(updateHomeBackupInfo);
+                showToast("Export généré ✅");
             });
         });
     </script>
