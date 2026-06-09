@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v23 - Gestion arbres et filtres date</title>
+    <title>Phénotypage v35 -  v25 - Interface terrain</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -987,11 +987,197 @@
         .slider-value-static.na-value { color: var(--text-muted) !important; }
         input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.75; }
 
+
+
+        /* ===== v25 réappliquée proprement : menu iOS et liste terrain ===== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.42);
+            z-index: 1500;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .drawer-overlay.active { display: flex; }
+        .drawer {
+            width: 100%;
+            max-height: 88vh;
+            overflow: auto;
+            background: var(--bg-card);
+            border-radius: 22px 22px 0 0;
+            padding: 16px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.18);
+        }
+        .drawer-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .drawer-title h2 { margin: 0; font-size: 22px; }
+        .close-btn {
+            background: var(--danger);
+            color: #fff;
+            width: 44px;
+            height: 44px;
+            min-height: 44px;
+            border-radius: 50%;
+            padding: 0;
+            font-size: 24px;
+            font-weight: 1000;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .menu-grid button {
+            min-height: 52px;
+            border-radius: 16px;
+            padding: 10px 8px;
+            font-size: 14px;
+            font-weight: 850;
+        }
+        .menu-info-line {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+        #view-list .list-top-area header h1::after {
+            content: "Phénotypage";
+            display: block;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 800;
+            margin-top: 3px;
+            letter-spacing: 0.2px;
+        }
+        .hybrid-card-main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            pointer-events: none;
+        }
+        .hybrid-mainline {
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .hybrid-crossline {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100vw - 110px);
+        }
+        .hybrid-decision-badge {
+            font-size: 20px;
+            pointer-events: none;
+        }
+        .sticky-next-btn {
+            position: fixed;
+            bottom: calc(76px + env(safe-area-inset-bottom));
+            left: 20px;
+            right: 20px;
+            width: calc(100% - 40px);
+            background: var(--primary);
+            box-shadow: 0 4px 14px rgba(0, 122, 255, 0.28);
+            z-index: 100;
+        }
+        @media (prefers-color-scheme: dark) {
+            .drawer { background: var(--bg-card); }
+        }
+
+
+        /* ===== v31 - Labo à faire et export synthèse ===== */
+        .lab-request-row {
+            margin-top: 12px;
+            background: rgba(0, 122, 255, 0.10);
+            border: 1px solid rgba(0, 122, 255, 0.20);
+        }
+        .lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(0, 122, 255, 0.12);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 850;
+            margin-left: 4px;
+            white-space: nowrap;
+        }
+        .lab-badge.done {
+            background: rgba(52, 199, 89, 0.14);
+            color: var(--success);
+        }
+        @media (prefers-color-scheme: dark) {
+            .lab-request-row { background: rgba(10, 132, 255, 0.16); border-color: rgba(10, 132, 255, 0.30); }
+            .lab-badge { background: rgba(10, 132, 255, 0.18); }
+            .lab-badge.done { background: rgba(48, 209, 88, 0.18); }
+        }
+
+
+
+        /* ===== v34 - Correctifs bouton sauvegarde et filtre labo ===== */
+        #phenotype-form { padding-bottom: 130px !important; }
+        #btn-save-hybrid.sticky-btn {
+            position: fixed !important;
+            bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+            left: 20px !important;
+            right: 20px !important;
+            width: calc(100% - 40px) !important;
+            z-index: 100 !important;
+        }
+
+
+
+        /* ===== v35 - Bouton sauvegarde compact + affichage croisement selon filtre ===== */
+        #btn-save-hybrid.sticky-btn {
+            position: fixed !important;
+            bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+            left: 50% !important;
+            right: auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: calc(100vw - 40px) !important;
+            transform: translateX(-50%) !important;
+            padding: 16px 24px !important;
+            border-radius: 18px !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
+
+        #phenotype-form {
+            padding-bottom: 120px !important;
+        }
+
+        #hybrids-list.filter-all .hybrid-crossline {
+            display: none !important;
+        }
+
+        #hybrids-list.filter-active .hybrid-crossline {
+            display: block !important;
+        }
+
 </style>
 </head>
 <body>
 
-    <div id="view-home" class="view active">
+    <div id="view-home" class="view">
         <div class="home-container">
             <h1>Projet -<br>Marqueur génétique</h1>
             <p class="home-subtitle">Phénotypage verger</p>
@@ -1010,10 +1196,10 @@
         </div>
     </div>
 
-    <div id="view-list" class="view">
+    <div id="view-list" class="view active">
         <div id="list-top-area" class="list-top-area">
             <header>
-                <button id="btn-home-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Accueil</span></button>
+                <button id="btn-home-back" type="button" class="action-btn btn-retour"><span class="icon">☰</span><span>Menu</span></button>
                 <h1>Hybrides</h1>
                 <button id="btn-stats" type="button" class="action-btn btn-stats">
                     <span class="icon">📊</span>
@@ -1038,6 +1224,7 @@
                     <button type="button" class="filter-chip" data-filter="tag">🏷️ Étiquettes</button>
                     <button type="button" class="filter-chip" data-filter="cut">✂️ Coupés</button>
                     <button type="button" class="filter-chip" id="date-filter-chip" data-filter="date">📅 Date</button>
+                    <button type="button" class="filter-chip" data-filter="lab">🔬 Labo à faire</button>
                 </div>
             </div>
         </div>
@@ -1123,6 +1310,11 @@
                             <input type="range" id="fente" min="0" max="3" step="1" value="0" aria-label="Fente pistillaire">
                         </div>
                     </div>
+
+                    <label class="checkbox-row lab-request-row" id="lab-request-row">
+                        <input type="checkbox" id="lab-requested">
+                        <span>🔬 Observation laboratoire à faire</span>
+                    </label>
                 </div>
             </div>
 
@@ -1179,6 +1371,37 @@
         </form>
     </div>
 
+
+
+    <div id="menu-drawer" class="drawer-overlay">
+        <div class="drawer">
+            <div class="drawer-title">
+                <h2>Menu</h2>
+                <button type="button" id="btn-close-menu" class="close-btn">×</button>
+            </div>
+            <div class="card">
+                <h3>📦 Import / Export</h3>
+                <div class="menu-grid">
+                    <button type="button" id="menu-import" class="btn-secondary">📥 Importer</button>
+                    <button type="button" id="menu-export" class="btn-primary">📦 Export ZIP</button>
+                </div>
+                <div id="menu-last-export-info" class="menu-info-line">📦 Dernier export : jamais</div>
+            </div>
+            <div class="card">
+                <h3>🌳 Gestion</h3>
+                <div class="menu-grid">
+                    <button type="button" id="menu-manage-trees" class="btn-primary">🌳 Arbres</button>
+                    <button type="button" id="menu-home" class="btn-primary" style="display:none;">🏠 Accueil</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>💾 Données</h3>
+                <div id="menu-last-save-info" class="menu-info-line">💾 Dernière sauvegarde locale : jamais</div>
+                <button type="button" id="menu-reset" class="btn-reset">⚠️ Nouvelle saison / tout effacer</button>
+            </div>
+        </div>
+    </div>
+
     <div id="photo-modal" class="modal-overlay">
         <div class="modal-content">
             <h4>Photo des fruits</h4>
@@ -1229,6 +1452,7 @@
         let filterMode = 'all'; 
         let currentTagHybridId = null; 
         let currentTempPhoto = null;
+        let saveAndNextRequested = false;
         let lastLocalSaveAt = null;
         let lastExportAt = null;
         let dateFilter = { mode: null, start: '', end: '' };
@@ -1306,6 +1530,10 @@
             const exportEl = document.getElementById('last-export-info');
             if (saveEl) saveEl.textContent = `💾 Dernière sauvegarde locale : ${formatDateTimeForDisplay(lastLocalSaveAt)}`;
             if (exportEl) exportEl.textContent = `📦 Dernier export : ${formatDateTimeForDisplay(lastExportAt)}`;
+            const menuSaveEl = document.getElementById('menu-last-save-info');
+            const menuExportEl = document.getElementById('menu-last-export-info');
+            if (menuSaveEl) menuSaveEl.textContent = `💾 Dernière sauvegarde locale : ${formatDateTimeForDisplay(lastLocalSaveAt)}`;
+            if (menuExportEl) menuExportEl.textContent = `📦 Dernier export : ${formatDateTimeForDisplay(lastExportAt)}`;
         }
 
         function normalizeSearchText(value) {
@@ -1591,6 +1819,32 @@
             return dateValue >= dateFilter.start && dateValue <= dateFilter.end;
         }
 
+        function isFilledLabValue(value) {
+            if (value === undefined || value === null) return false;
+            const text = String(value).trim();
+            return text !== '' && text.toUpperCase() !== 'NA' && text.toUpperCase() !== 'N/A';
+        }
+
+        function isLaboCompleteForHybrid(id) {
+            const data = dataStore[id] || {};
+            const hasPhoto = !!photosStore[id];
+            const hasCalibre = [1,2,3,4].some(i => isFilledLabValue(data[`calibre-${i}`]));
+            const hasCuvette = [1,2,3,4].some(i => isFilledLabValue(data[`ferm-${i}a`]));
+            const hasJoue = [1,2,3,4].some(i => isFilledLabValue(data[`ferm-${i}b`]));
+            return hasPhoto && hasCalibre && hasCuvette && hasJoue;
+        }
+
+        function getLaboStatusForHybrid(id) {
+            const data = dataStore[id] || {};
+            if (!data.labRequested) return 'Non demandé';
+            return isLaboCompleteForHybrid(id) ? 'Terminé' : 'À faire';
+        }
+
+        function isLaboFilterMatch(id) {
+            const data = dataStore[id] || {};
+            return !!data.labRequested && !isLaboCompleteForHybrid(id);
+        }
+
         function setSliderKnown(sliderEl, known) {
             if (!sliderEl) return;
             sliderEl.dataset.hasValue = known ? 'true' : 'false';
@@ -1727,7 +1981,18 @@
             }
         }
 
-        function returnToList() {
+        
+        function findNextPendingHybrid(currentId) {
+            if (!hybridesInitiaux.length) return null;
+            const startIndex = Math.max(0, hybridesInitiaux.findIndex(h => h.id === currentId));
+            for (let i = startIndex + 1; i < hybridesInitiaux.length; i++) {
+                const d = dataStore[hybridesInitiaux[i].id] || {};
+                if (d.status !== 'done') return hybridesInitiaux[i];
+            }
+            return null;
+        }
+
+function returnToList() {
             navigateTo('view-list');
             if (lastOpenedHybridId) {
                 setTimeout(() => {
@@ -1742,20 +2007,32 @@
         }
 
         function applyFilters() {
-            const rawTerm = document.getElementById('search-input').value;
+            const listEl = document.getElementById('hybrids-list');
+            const rawTerm = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
             const term = normalizeSearchText(rawTerm);
             const items = document.querySelectorAll('#hybrids-list li');
+            const dateFilterActive = !!(dateFilter && dateFilter.mode);
+            const activeFilterMode = dateFilterActive ? 'date' : (filterMode || 'all');
+            const isRealFilterActive = activeFilterMode !== 'all';
+
+            if (listEl) {
+                listEl.classList.toggle('filter-all', !isRealFilterActive);
+                listEl.classList.toggle('filter-active', isRealFilterActive);
+            }
+
             let currentHeader = null;
             let headerHasVisibleItems = false;
             
             items.forEach(li => {
                 if (li.classList.contains('header-croisement')) {
-                    if (currentHeader) currentHeader.style.display = headerHasVisibleItems ? 'block' : 'none';
+                    if (currentHeader) {
+                        currentHeader.style.display = (!isRealFilterActive && headerHasVisibleItems) ? 'block' : 'none';
+                    }
                     currentHeader = li;
                     headerHasVisibleItems = false;
                 } else if (li.classList.contains('hybrid-item')) {
                     const text = li.textContent || '';
-                    const cross = li.getAttribute('data-cross') || "";
+                    const cross = li.getAttribute('data-cross') || '';
                     const searchData = li.getAttribute('data-search') || '';
                     const haystack = normalizeSearchText(`${text} ${cross} ${searchData}`);
                     const status = li.getAttribute('data-status');
@@ -1763,6 +2040,7 @@
                     const treeCut = li.getAttribute('data-cut') === 'true';
                     const decision = li.getAttribute('data-decision') || '';
                     const obsDate = li.getAttribute('data-date') || '';
+                    const labMatch = li.getAttribute('data-lab-match') === 'true';
                     
                     let matchSearch = !term || haystack.includes(term);
                     let matchFilter = true;
@@ -1774,8 +2052,9 @@
                     else if (filterMode === 'decision-selectionner') matchFilter = decision === 'Sélectionner';
                     else if (filterMode === 'tag') matchFilter = tagMissing;
                     else if (filterMode === 'cut') matchFilter = treeCut;
+                    else if (filterMode === 'lab') matchFilter = labMatch;
 
-                    if (matchFilter && dateFilter && dateFilter.mode) matchFilter = matchesDateFilter(obsDate);
+                    if (matchFilter && dateFilterActive) matchFilter = matchesDateFilter(obsDate);
 
                     if (matchSearch && matchFilter) {
                         li.style.display = 'flex';
@@ -1785,7 +2064,9 @@
                     }
                 }
             });
-            if (currentHeader) currentHeader.style.display = headerHasVisibleItems ? 'block' : 'none';
+            if (currentHeader) {
+                currentHeader.style.display = (!isRealFilterActive && headerHasVisibleItems) ? 'block' : 'none';
+            }
         }
 
         function processExcelData(dataArray) {
@@ -1828,6 +2109,7 @@
                         if (cell === 'COMMENTAIRE') cols.com = j;
                         if (cell === 'NOM PHOTO') cols.photoName = j;
                         if (cell === 'DERNIÈRE MODIFICATION' || cell === 'DERNIERE MODIFICATION') cols.updatedAt = j;
+                        if (cell === 'OBSERVATION LABO À FAIRE' || cell === 'OBSERVATION LABO A FAIRE' || cell === 'OBSERVATION LABORATOIRE À FAIRE' || cell === 'OBSERVATION LABORATOIRE A FAIRE') cols.labRequested = j;
                     }
                     if (cols.rang !== undefined && cols.arbre !== undefined) {
                         headerRowIndex = i;
@@ -1891,7 +2173,8 @@
                                     "ferm-4b": cols.f4b !== undefined ? (row[cols.f4b] || "") : "",
                                     commentaire: cols.com !== undefined ? (row[cols.com] || "") : "",
                                     photoName: cols.photoName !== undefined ? (row[cols.photoName] || "") : "",
-                                    updatedAt: cols.updatedAt !== undefined ? (row[cols.updatedAt] || "") : ""
+                                    updatedAt: cols.updatedAt !== undefined ? (row[cols.updatedAt] || "") : "",
+                                    labRequested: cols.labRequested !== undefined ? String(row[cols.labRequested] || '').toUpperCase() === 'OUI' : false
                                 };
                         }
                     }
@@ -1953,7 +2236,8 @@
             });
 
             document.getElementById('btn-home-back').addEventListener('click', () => {
-                navigateTo('view-home');
+                const drawer = document.getElementById('menu-drawer');
+                if (drawer) drawer.classList.add('active');
             });
 
             document.getElementById('btn-manage-trees').addEventListener('click', () => {
@@ -1962,13 +2246,51 @@
             });
 
             document.getElementById('btn-management-back').addEventListener('click', () => {
-                navigateTo('view-home');
+                navigateTo('view-list');
+                renderList();
             });
 
             document.getElementById('btn-management-list').addEventListener('click', () => {
                 navigateTo('view-list');
                 renderList();
             });
+
+            document.getElementById('btn-close-menu').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+            });
+            document.getElementById('menu-drawer').addEventListener('click', (e) => {
+                if (e.target.id === 'menu-drawer') e.currentTarget.classList.remove('active');
+            });
+            document.getElementById('menu-import').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+                document.getElementById('file-import').click();
+            });
+            document.getElementById('menu-export').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+                document.getElementById('btn-export').click();
+            });
+            const menuExportSummaryBtn = document.getElementById('menu-export-summary');
+            if (menuExportSummaryBtn) {
+                menuExportSummaryBtn.addEventListener('click', () => {
+                    document.getElementById('menu-drawer').classList.remove('active');
+                    exportSummaryExcel();
+                });
+            }
+            document.getElementById('menu-manage-trees').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+                renderManagementList();
+                navigateTo('view-management');
+            });
+            document.getElementById('menu-home').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+                navigateTo('view-list');
+                renderList();
+            });
+            document.getElementById('menu-reset').addEventListener('click', () => {
+                document.getElementById('menu-drawer').classList.remove('active');
+                document.getElementById('btn-reset').click();
+            });
+
 
             document.getElementById('search-input').addEventListener('input', applyFilters);
 
@@ -2346,6 +2668,8 @@
         function renderList() {
             const listEl = document.getElementById('hybrids-list');
             listEl.innerHTML = '';
+            listEl.classList.toggle('filter-all', !(dateFilter && dateFilter.mode) && (filterMode || 'all') === 'all');
+            listEl.classList.toggle('filter-active', !!(dateFilter && dateFilter.mode) || (filterMode || 'all') !== 'all');
             
             const progressWrapper = document.getElementById('progress-wrapper');
             
@@ -2353,7 +2677,7 @@
                 progressWrapper.style.display = 'none';
                 const emptyLi = document.createElement('li');
                 emptyLi.className = 'empty-state';
-                emptyLi.textContent = "Aucun hybride. Veuillez importer votre fichier Excel ou Zip depuis l'accueil.";
+                emptyLi.textContent = "Aucun hybride. Veuillez importer votre fichier Excel ou Zip depuis le menu ou l’accueil.";
                 listEl.appendChild(emptyLi);
                 return;
             } else {
@@ -2403,6 +2727,7 @@
                 li.setAttribute('data-cut', treeCut ? 'true' : 'false');
                 li.setAttribute('data-decision', dataStore[h.id] && dataStore[h.id].decision ? dataStore[h.id].decision : '');
                 li.setAttribute('data-date', dataStore[h.id] && dataStore[h.id].date ? dataStore[h.id].date : '');
+                li.setAttribute('data-lab-match', isLaboFilterMatch(h.id) ? 'true' : 'false');
                 const searchVariants = [
                     `R${h.rang}A${h.arbre}`,
                     `R${h.rang} A${h.arbre}`,
@@ -2415,13 +2740,16 @@
                 
                 let tagBadge = tagMissing ? `<span class="tag-indicator" title="Étiquette à refaire">🏷️</span>` : ``;
                 let cutBadge = treeCut ? `<span class="tag-indicator" title="Arbre coupé">✂️</span>` : ``;
+                const labRequested = !!(dataStore[h.id] && dataStore[h.id].labRequested);
+                const labComplete = isLaboCompleteForHybrid(h.id);
+                let labBadge = labRequested ? `<span class="lab-badge ${labComplete ? 'done' : ''}" title="Observation laboratoire">${labComplete ? '🔬 OK' : '🔬 À faire'}</span>` : ``;
                 
                 const summary = getHybridSummary(dataStore[h.id]);
-                let summaryHTML = summary ? `<span class="hybrid-subline">${summary}</span>` : ``;
-                let contentHTML = `<div class="li-content"><span class="position-text">Rang ${h.rang} - Arbre ${h.arbre} ${tagBadge} ${cutBadge}</span>${summaryHTML}</div>`;
+                let summaryHTML = summary ? `<span class="hybrid-subline">${summary}</span>` : `<span class="hybrid-subline">À faire</span>`;
+                let contentHTML = `<div class="hybrid-card-main"><span class="hybrid-mainline">R${h.rang} · A${h.arbre} ${tagBadge} ${cutBadge} ${labBadge}</span><span class="hybrid-crossline">${h.croisement || ''}</span>${summaryHTML}</div>`;
                 
                 if (etat === 'done') {
-                    contentHTML += `<span>${badge}</span>`;
+                    contentHTML += `<span class="hybrid-decision-badge">${badge}</span>`;
                 }
                 
                 li.innerHTML = contentHTML;
@@ -2511,6 +2839,8 @@
             document.getElementById('hybrid-id').value = hybride.id;
             
             document.getElementById('phenotype-form').reset();
+            const labRequestedInput = document.getElementById('lab-requested');
+            if (labRequestedInput) labRequestedInput.checked = false;
             
             const chargeEl = document.getElementById('charge');
             const fenteEl = document.getElementById('fente');
@@ -2542,6 +2872,7 @@
                 setSliderKnown(document.getElementById('fente'), hasFenteValue);
                 document.getElementById('date-maturite').value = d.date || "";
                 document.getElementById('commentaire').value = d.commentaire || "";
+                if (labRequestedInput) labRequestedInput.checked = !!d.labRequested;
                 
                 if (d.decision) {
                     const decisionRadio = document.querySelector(`input[name="decision"][value="${d.decision}"]`);
@@ -2601,7 +2932,7 @@
             }
         });
 
-        document.getElementById('phenotype-form').addEventListener('submit', (e) => {
+document.getElementById('phenotype-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const saveBtn = document.getElementById('btn-save-hybrid');
             if (saveBtn && saveBtn.disabled) return;
@@ -2609,7 +2940,6 @@
                 saveBtn.disabled = true;
                 saveBtn.textContent = 'Enregistrement...';
             }
-
             const id = document.getElementById('hybrid-id').value;
             const decisionElement = document.querySelector('input[name="decision"]:checked');
             const chargeSliderSave = document.getElementById('charge');
@@ -2632,6 +2962,7 @@
                 charge: chargeVal,
                 fente: (!chargeKnown || parseInt(chargeVal) === 0 || !fenteKnown) ? "N/A" : fenteSliderSave.value,
                 commentaire: document.getElementById('commentaire').value,
+                labRequested: !!document.getElementById('lab-requested')?.checked,
                 updatedAt: updatedAt
             };
 
@@ -2672,6 +3003,38 @@
                 }
             }); 
         });
+
+
+        function exportSummaryExcel() {
+            if (hybridesInitiaux.length === 0) {
+                alert("Aucune donnée à exporter. Veuillez d'abord importer un fichier.");
+                return;
+            }
+            const summaryData = hybridesInitiaux.map(h => {
+                const data = dataStore[h.id] || {};
+                return {
+                    "Croisement": h.croisement || "",
+                    "Rang": h.rang,
+                    "Arbre": h.arbre,
+                    "Date d'observation": emptyToNA(data.date),
+                    "Charge": data.charge !== undefined ? data.charge : "NA",
+                    "Fente pistillaire": data.fente !== undefined ? data.fente : "NA",
+                    "Décision": emptyToNA(data.decision),
+                    "Commentaire": data.commentaire || "",
+                    "Etiquette à refaire": data.tagMissing ? "OUI" : "NON",
+                    "Arbre coupé": (data.treeCut || data.status === 'cut') ? "OUI" : "NON",
+                    "Observation laboratoire à faire": data.labRequested ? "OUI" : "NON",
+                    "Statut labo": getLaboStatusForHybrid(h.id),
+                    "Dernière modification": data.updatedAt ? formatDateTimeForDisplay(data.updatedAt) : ""
+                };
+            });
+            const worksheet = XLSX.utils.json_to_sheet(summaryData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Synthèse");
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            saveAs(new Blob([excelBuffer], {type: "application/octet-stream"}), `Synthese_Phenotypage_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showToast("Synthèse Excel générée ✅");
+        }
 
         document.getElementById('btn-export').addEventListener('click', () => {
             if (hybridesInitiaux.length === 0) {
@@ -2749,6 +3112,8 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
                     "Fermeté F4 Joue": emptyToNA(data["ferm-4b"]),
                     "Nom Photo": data.photoName || "",
                     "Commentaire": data.commentaire || "",
+                    "Observation laboratoire à faire": data.labRequested ? "OUI" : "NON",
+                    "Statut labo": getLaboStatusForHybrid(h.id),
                     "Dernière modification": data.updatedAt ? formatDateTimeForDisplay(data.updatedAt) : ""
                 });
                 
