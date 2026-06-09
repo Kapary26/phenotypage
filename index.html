@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v22 - Source photo</title>
+    <title>Phénotypage v23 - Gestion arbres et filtres date</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -954,6 +954,39 @@
             }
         }
 
+
+        /* ===== v23 - Gestion arbres, filtre date et valeurs NA ===== */
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .management-action-btn { margin-top: 18px; }
+        .management-results { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .management-tree-row {
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        .management-tree-title { font-weight: 850; color: var(--text-main); }
+        .management-tree-sub { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
+        .management-delete-btn {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 12px;
+            background: var(--danger);
+            white-space: nowrap;
+        }
+        .date-filter-modal-fields { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .date-filter-modal-fields label { margin-top: 0; }
+        .slider-value-static.na-value { color: var(--text-muted) !important; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.75; }
+
 </style>
 </head>
 <body>
@@ -969,6 +1002,7 @@
                 <button id="btn-export" class="btn-primary btn-large">📦 Exporter Données (.zip)</button>
                 <div id="last-export-info" class="home-meta-line">📦 Dernier export : jamais</div>
                 <button id="btn-go-list" class="btn-success btn-large" style="display: none;">📋 Accéder aux arbres</button>
+                <button id="btn-manage-trees" class="btn-primary btn-large">🌳 Gestion des arbres</button>
                 <div id="last-save-info" class="home-meta-line">💾 Dernière sauvegarde locale : jamais</div>
                 
                 <button id="btn-reset" class="btn-reset">⚠️ Nouvelle saison (Tout effacer)</button>
@@ -1003,6 +1037,7 @@
                     <button type="button" class="filter-chip" data-filter="decision-selectionner">✅ Sélectionner</button>
                     <button type="button" class="filter-chip" data-filter="tag">🏷️ Étiquettes</button>
                     <button type="button" class="filter-chip" data-filter="cut">✂️ Coupés</button>
+                    <button type="button" class="filter-chip" id="date-filter-chip" data-filter="date">📅 Date</button>
                 </div>
             </div>
         </div>
@@ -1019,6 +1054,38 @@
 
         <div id="stats-content">
             <div class="stats-empty">Aucune donnée à analyser pour le moment.</div>
+        </div>
+    </div>
+
+    <div id="view-management" class="view">
+        <header class="stats-header">
+            <button id="btn-management-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Accueil</span></button>
+            <h1>Gestion des arbres</h1>
+            <button id="btn-management-list" type="button" class="action-btn btn-stats"><span class="icon">📋</span><span>Liste</span></button>
+        </header>
+
+        <div class="card">
+            <h3>➕ Ajouter un arbre</h3>
+            <label>Croisement :</label>
+            <input type="text" id="manage-add-cross" placeholder="Nom du croisement">
+            <div class="management-grid">
+                <div>
+                    <label>Rang :</label>
+                    <input type="number" id="manage-add-rang" inputmode="numeric" placeholder="NA">
+                </div>
+                <div>
+                    <label>Arbre :</label>
+                    <input type="number" id="manage-add-arbre" inputmode="numeric" placeholder="NA">
+                </div>
+            </div>
+            <button id="btn-add-tree" type="button" class="btn-success btn-large management-action-btn">Ajouter l'arbre</button>
+        </div>
+
+        <div class="card">
+            <h3>🗑️ Supprimer un arbre</h3>
+            <label>Rechercher :</label>
+            <input type="text" id="manage-delete-search" placeholder="Ex. R8A153, rang, arbre ou croisement">
+            <div id="manage-delete-results" class="management-results"></div>
         </div>
     </div>
 
@@ -1072,10 +1139,6 @@
                         </div>
                         <img id="photo-preview" src="" alt="Aperçu de la photo">
                     </div>
-                    <div class="photo-source-actions">
-                        <button type="button" id="btn-camera-photo" class="photo-source-btn primary-photo">📷 Appareil</button>
-                        <button type="button" id="btn-library-photo" class="photo-source-btn">🖼️ Galerie / fichiers</button>
-                    </div>
                     <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
                     <input type="file" id="photo-library-input" accept="image/*" style="display: none;">
                 </div>
@@ -1126,6 +1189,16 @@
         </div>
     </div>
 
+    <div id="date-filter-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h4>Filtrer par date d'observation</h4>
+            <button type="button" id="btn-date-filter-exact" class="modal-btn text-primary">📅 Date exacte</button>
+            <button type="button" id="btn-date-filter-range" class="modal-btn text-primary">📆 Créneau de dates</button>
+            <button type="button" id="btn-date-filter-clear" class="modal-btn text-danger">Réinitialiser le filtre date</button>
+            <button type="button" id="btn-date-filter-cancel" class="modal-btn text-bold">Annuler</button>
+        </div>
+    </div>
+
     <div id="tag-modal" class="modal-overlay">
         <div class="modal-content">
             <h4>Statut rapide</h4>
@@ -1158,6 +1231,7 @@
         let currentTempPhoto = null;
         let lastLocalSaveAt = null;
         let lastExportAt = null;
+        let dateFilter = { mode: null, start: '', end: '' };
 
         function sortHybrids(hybrids) {
             const croisementMinRang = {};
@@ -1497,26 +1571,64 @@
             `;
         }
 
+        function isoDateToShortDisplay(value) {
+            if (!value) return '';
+            const parts = String(value).split('-');
+            if (parts.length !== 3) return value;
+            return `${parts[2]}/${parts[1]}`;
+        }
+
+        function getDateFilterLabel() {
+            if (!dateFilter || !dateFilter.mode) return '📅 Date';
+            if (dateFilter.mode === 'exact') return `📅 ${isoDateToShortDisplay(dateFilter.start)}`;
+            return `📅 ${isoDateToShortDisplay(dateFilter.start)} → ${isoDateToShortDisplay(dateFilter.end)}`;
+        }
+
+        function matchesDateFilter(dateValue) {
+            if (!dateFilter || !dateFilter.mode) return true;
+            if (!dateValue) return false;
+            if (dateFilter.mode === 'exact') return dateValue === dateFilter.start;
+            return dateValue >= dateFilter.start && dateValue <= dateFilter.end;
+        }
+
+        function setSliderKnown(sliderEl, known) {
+            if (!sliderEl) return;
+            sliderEl.dataset.hasValue = known ? 'true' : 'false';
+        }
+
+        function sliderHasValue(sliderEl) {
+            return sliderEl && sliderEl.dataset.hasValue === 'true';
+        }
+
+        function setInputPlaceholdersToNA() {
+            ['calibre-1','calibre-2','calibre-3','calibre-4','ferm-1a','ferm-1b','ferm-2a','ferm-2b','ferm-3a','ferm-3b','ferm-4a','ferm-4b'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.placeholder = 'NA';
+            });
+        }
+
+        function emptyToNA(value) {
+            return (value === undefined || value === null || value === '') ? 'NA' : value;
+        }
+
         function updateFilterUI() {
             document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.toggle('active', chip.dataset.filter === filterMode);
+                const isDateChip = chip.dataset.filter === 'date';
+                const isActive = isDateChip ? !!(dateFilter && dateFilter.mode) : chip.dataset.filter === filterMode;
+                chip.classList.toggle('active', isActive);
             });
-            const label = {
-                all: 'Tous',
-                pending: 'À faire',
-                done: 'Évalués',
-                'decision-eliminer': 'Éliminer',
-                'decision-poursuivre': 'Poursuivre',
-                'decision-selectionner': 'Sélect.',
-                tag: 'Étiq.',
-                cut: 'Coupés'
-            }[filterMode] || 'Filtre';
+            const dateChip = document.getElementById('date-filter-chip');
+            if (dateChip) dateChip.textContent = getDateFilterLabel();
         }
 
         function updateSliderVisuals(sliderEl, displayEl, palette) {
             if (!sliderEl) return;
             const val = parseInt(sliderEl.value);
-            if (displayEl) displayEl.textContent = val;
+            const known = sliderHasValue(sliderEl);
+            if (displayEl) {
+                displayEl.textContent = known ? val : 'NA';
+                displayEl.classList.toggle('na-value', !known);
+            }
             const min = parseFloat(sliderEl.min || 0);
             const max = parseFloat(sliderEl.max || 100);
             const pct = max === min ? 0 : ((val - min) / (max - min)) * 100;
@@ -1556,16 +1668,16 @@
                 updateSliderVisuals(sliderEl, displayEl, palette);
                 if (typeof onInputExtra === 'function') onInputExtra();
             };
-            sliderEl.addEventListener('pointerdown', () => { showSliderBubble(sliderEl); refresh(); });
+            sliderEl.addEventListener('pointerdown', () => { setSliderKnown(sliderEl, true); showSliderBubble(sliderEl); refresh(); });
             sliderEl.addEventListener('pointerup', () => hideSliderBubble(sliderEl));
             sliderEl.addEventListener('pointercancel', () => hideSliderBubble(sliderEl));
-            sliderEl.addEventListener('touchstart', () => { showSliderBubble(sliderEl); refresh(); }, {passive: true});
+            sliderEl.addEventListener('touchstart', () => { setSliderKnown(sliderEl, true); showSliderBubble(sliderEl); refresh(); }, {passive: true});
             sliderEl.addEventListener('touchend', () => hideSliderBubble(sliderEl), {passive: true});
-            sliderEl.addEventListener('mousedown', () => { showSliderBubble(sliderEl); refresh(); });
+            sliderEl.addEventListener('mousedown', () => { setSliderKnown(sliderEl, true); showSliderBubble(sliderEl); refresh(); });
             sliderEl.addEventListener('mouseup', () => hideSliderBubble(sliderEl));
             sliderEl.addEventListener('focus', () => showSliderBubble(sliderEl));
             sliderEl.addEventListener('blur', () => hideSliderBubble(sliderEl));
-            sliderEl.addEventListener('input', () => { showSliderBubble(sliderEl); refresh(); });
+            sliderEl.addEventListener('input', () => { setSliderKnown(sliderEl, true); showSliderBubble(sliderEl); refresh(); });
         }
 
         function toggleDependentFields(chargeVal) {
@@ -1595,10 +1707,16 @@
             if (decisionCard) decisionCard.style.display = 'block';
             if (commentCard) commentCard.style.display = 'block';
 
-            if (parseInt(chargeVal) === 0) {
+            if (!sliderHasValue(document.getElementById('charge'))) {
                 if (terrainDependentFields) terrainDependentFields.style.display = 'none';
                 fenteSlider.disabled = true;
-                valFente.textContent = "N/A";
+                setSliderKnown(fenteSlider, false);
+                updateSliderVisuals(fenteSlider, valFente, couleursFente);
+                if (laboCard) laboCard.style.display = 'none';
+            } else if (parseInt(chargeVal) === 0) {
+                if (terrainDependentFields) terrainDependentFields.style.display = 'none';
+                fenteSlider.disabled = true;
+                setSliderKnown(fenteSlider, false);
                 updateSliderVisuals(fenteSlider, valFente, couleursFente);
                 if (laboCard) laboCard.style.display = 'none';
             } else {
@@ -1644,6 +1762,7 @@
                     const tagMissing = li.getAttribute('data-tag') === 'true';
                     const treeCut = li.getAttribute('data-cut') === 'true';
                     const decision = li.getAttribute('data-decision') || '';
+                    const obsDate = li.getAttribute('data-date') || '';
                     
                     let matchSearch = !term || haystack.includes(term);
                     let matchFilter = true;
@@ -1655,6 +1774,8 @@
                     else if (filterMode === 'decision-selectionner') matchFilter = decision === 'Sélectionner';
                     else if (filterMode === 'tag') matchFilter = tagMissing;
                     else if (filterMode === 'cut') matchFilter = treeCut;
+
+                    if (matchFilter && dateFilter && dateFilter.mode) matchFilter = matchesDateFilter(obsDate);
 
                     if (matchSearch && matchFilter) {
                         li.style.display = 'flex';
@@ -1782,6 +1903,10 @@
                 
                 saveDataLocally().then(() => {
                     document.getElementById('btn-go-list').style.display = 'block';
+                    const manageBtnInitial = document.getElementById('btn-manage-trees');
+                    if (manageBtnInitial) manageBtnInitial.style.display = 'block';
+                    const manageBtnAfterImport = document.getElementById('btn-manage-trees');
+                    if (manageBtnAfterImport) manageBtnAfterImport.style.display = 'block';
                     document.getElementById('btn-go-list').click();
                 });
                 
@@ -1831,6 +1956,20 @@
                 navigateTo('view-home');
             });
 
+            document.getElementById('btn-manage-trees').addEventListener('click', () => {
+                renderManagementList();
+                navigateTo('view-management');
+            });
+
+            document.getElementById('btn-management-back').addEventListener('click', () => {
+                navigateTo('view-home');
+            });
+
+            document.getElementById('btn-management-list').addEventListener('click', () => {
+                navigateTo('view-list');
+                renderList();
+            });
+
             document.getElementById('search-input').addEventListener('input', applyFilters);
 
             document.getElementById('btn-stats').addEventListener('click', () => {
@@ -1850,11 +1989,52 @@
 
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.addEventListener('click', () => {
-                    filterMode = chip.dataset.filter;
+                    if (chip.dataset.filter === 'date') {
+                        openDateFilterModal();
+                        return;
+                    }
+                    filterMode = (filterMode === chip.dataset.filter && filterMode !== 'all') ? 'all' : chip.dataset.filter;
                     updateFilterUI();
                     applyFilters();
                 });
             });
+
+            document.getElementById('btn-date-filter-exact').addEventListener('click', () => {
+                document.getElementById('date-filter-modal').classList.remove('active');
+                const value = prompt("Date exacte d'observation (format AAAA-MM-JJ) :", dateFilter.start || new Date().toISOString().split('T')[0]);
+                if (!value) return;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) { alert("Format attendu : AAAA-MM-JJ"); return; }
+                dateFilter = { mode: 'exact', start: value, end: value };
+                updateFilterUI();
+                applyFilters();
+            });
+
+            document.getElementById('btn-date-filter-range').addEventListener('click', () => {
+                document.getElementById('date-filter-modal').classList.remove('active');
+                const start = prompt("Date de début (format AAAA-MM-JJ) :", dateFilter.start || new Date().toISOString().split('T')[0]);
+                if (!start) return;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) { alert("Format attendu : AAAA-MM-JJ"); return; }
+                const end = prompt("Date de fin (format AAAA-MM-JJ) :", dateFilter.end || start);
+                if (!end) return;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(end)) { alert("Format attendu : AAAA-MM-JJ"); return; }
+                dateFilter = start <= end ? { mode: 'range', start, end } : { mode: 'range', start: end, end: start };
+                updateFilterUI();
+                applyFilters();
+            });
+
+            document.getElementById('btn-date-filter-clear').addEventListener('click', () => {
+                document.getElementById('date-filter-modal').classList.remove('active');
+                dateFilter = { mode: null, start: '', end: '' };
+                updateFilterUI();
+                applyFilters();
+            });
+
+            document.getElementById('btn-date-filter-cancel').addEventListener('click', () => {
+                document.getElementById('date-filter-modal').classList.remove('active');
+            });
+
+            document.getElementById('btn-add-tree').addEventListener('click', addTreeFromManagement);
+            document.getElementById('manage-delete-search').addEventListener('input', renderManagementList);
 
             document.getElementById('btn-import').addEventListener('click', () => {
                 document.getElementById('file-import').click();
@@ -1964,8 +2144,10 @@
                 photoModal.classList.add('active');
             });
 
-            document.getElementById('btn-camera-photo').addEventListener('click', openCameraPhotoPicker);
-            document.getElementById('btn-library-photo').addEventListener('click', openLibraryPhotoPicker);
+            const cameraPhotoBtn = document.getElementById('btn-camera-photo');
+            if (cameraPhotoBtn) cameraPhotoBtn.addEventListener('click', openCameraPhotoPicker);
+            const libraryPhotoBtn = document.getElementById('btn-library-photo');
+            if (libraryPhotoBtn) libraryPhotoBtn.addEventListener('click', openLibraryPhotoPicker);
 
             document.getElementById('btn-modal-camera-photo').addEventListener('click', () => {
                 photoModal.classList.remove('active');
@@ -2042,6 +2224,7 @@
             const valCharge = document.getElementById('val-charge');
             const valFente = document.getElementById('val-fente');
 
+            setInputPlaceholdersToNA();
             updateSliderVisuals(chargeSlider, valCharge, couleursCharge);
             updateSliderVisuals(fenteSlider, valFente, couleursFente);
 
@@ -2087,6 +2270,78 @@
                 }
             });
         });
+
+        function openDateFilterModal() {
+            const modal = document.getElementById('date-filter-modal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function renderManagementList() {
+            const container = document.getElementById('manage-delete-results');
+            if (!container) return;
+            const term = normalizeSearchText(document.getElementById('manage-delete-search').value || '');
+            const matches = hybridesInitiaux.filter(h => {
+                const searchable = normalizeSearchText(`${h.croisement} Rang ${h.rang} Arbre ${h.arbre} R${h.rang}A${h.arbre} ${h.rang}-${h.arbre}`);
+                return !term || searchable.includes(term);
+            }).slice(0, 40);
+            if (!matches.length) {
+                container.innerHTML = '<div class="stats-empty">Aucun arbre trouvé.</div>';
+                return;
+            }
+            container.innerHTML = matches.map(h => `
+                <div class="management-tree-row">
+                    <div>
+                        <div class="management-tree-title">Rang ${h.rang} - Arbre ${h.arbre}</div>
+                        <div class="management-tree-sub">${h.croisement}</div>
+                    </div>
+                    <button type="button" class="management-delete-btn" data-delete-id="${h.id}">Supprimer</button>
+                </div>
+            `).join('');
+            container.querySelectorAll('[data-delete-id]').forEach(btn => {
+                btn.addEventListener('click', () => deleteTreeFromManagement(btn.dataset.deleteId));
+            });
+        }
+
+        function addTreeFromManagement() {
+            const croisement = document.getElementById('manage-add-cross').value.trim();
+            const rang = parseInt(document.getElementById('manage-add-rang').value, 10);
+            const arbre = parseInt(document.getElementById('manage-add-arbre').value, 10);
+            if (!croisement || !Number.isFinite(rang) || !Number.isFinite(arbre)) {
+                alert('Renseigne un croisement, un rang et un arbre valides.');
+                return;
+            }
+            const id = `R${rang}_A${arbre}`;
+            if (hybridesInitiaux.some(h => h.id === id)) {
+                alert(`L'arbre Rang ${rang} - Arbre ${arbre} existe déjà.`);
+                return;
+            }
+            hybridesInitiaux.push({ id, croisement, rang, arbre });
+            sortHybrids(hybridesInitiaux);
+            saveDataLocally().then(() => {
+                document.getElementById('manage-add-cross').value = '';
+                document.getElementById('manage-add-rang').value = '';
+                document.getElementById('manage-add-arbre').value = '';
+                document.getElementById('btn-go-list').style.display = 'block';
+                document.getElementById('btn-manage-trees').style.display = 'block';
+                renderManagementList();
+                renderList();
+                showToast('Arbre ajouté ✅');
+            });
+        }
+
+        function deleteTreeFromManagement(id) {
+            const h = hybridesInitiaux.find(x => x.id === id);
+            if (!h) return;
+            if (!confirm(`Confirmer la suppression de Rang ${h.rang} - Arbre ${h.arbre} ?\n\nLa notation, la photo et les statuts associés seront supprimés.`)) return;
+            hybridesInitiaux = hybridesInitiaux.filter(x => x.id !== id);
+            delete dataStore[id];
+            delete photosStore[id];
+            saveDataLocally().then(() => {
+                renderManagementList();
+                renderList();
+                showToast('Arbre supprimé ✅');
+            });
+        }
 
         function renderList() {
             const listEl = document.getElementById('hybrids-list');
@@ -2147,6 +2402,7 @@
                 li.setAttribute('data-tag', tagMissing ? 'true' : 'false');
                 li.setAttribute('data-cut', treeCut ? 'true' : 'false');
                 li.setAttribute('data-decision', dataStore[h.id] && dataStore[h.id].decision ? dataStore[h.id].decision : '');
+                li.setAttribute('data-date', dataStore[h.id] && dataStore[h.id].date ? dataStore[h.id].date : '');
                 const searchVariants = [
                     `R${h.rang}A${h.arbre}`,
                     `R${h.rang} A${h.arbre}`,
@@ -2256,8 +2512,12 @@
             
             document.getElementById('phenotype-form').reset();
             
-            updateSliderVisuals(document.getElementById('charge'), document.getElementById('val-charge'), couleursCharge);
-            updateSliderVisuals(document.getElementById('fente'), document.getElementById('val-fente'), couleursFente);
+            const chargeEl = document.getElementById('charge');
+            const fenteEl = document.getElementById('fente');
+            setSliderKnown(chargeEl, false);
+            setSliderKnown(fenteEl, false);
+            updateSliderVisuals(chargeEl, document.getElementById('val-charge'), couleursCharge);
+            updateSliderVisuals(fenteEl, document.getElementById('val-fente'), couleursFente);
             document.querySelectorAll('input[name="decision"]').forEach(radio => { radio.checked = false; radio.dataset.wasChecked = 'false'; });
             
             document.getElementById('photo-input').value = "";
@@ -2274,8 +2534,12 @@
 
             if(dataStore[hybride.id]) {
                 const d = dataStore[hybride.id];
-                document.getElementById('charge').value = d.charge !== undefined ? d.charge : 0;
-                document.getElementById('fente').value = (d.fente !== undefined && d.fente !== "N/A") ? d.fente : 0;
+                const hasChargeValue = d.charge !== undefined && d.charge !== '' && d.charge !== 'N/A';
+                const hasFenteValue = d.fente !== undefined && d.fente !== '' && d.fente !== 'N/A';
+                document.getElementById('charge').value = hasChargeValue ? d.charge : 0;
+                document.getElementById('fente').value = hasFenteValue ? d.fente : 0;
+                setSliderKnown(document.getElementById('charge'), hasChargeValue);
+                setSliderKnown(document.getElementById('fente'), hasFenteValue);
                 document.getElementById('date-maturite').value = d.date || "";
                 document.getElementById('commentaire').value = d.commentaire || "";
                 
@@ -2298,6 +2562,8 @@
             } else {
                 document.getElementById('charge').value = 0;
                 document.getElementById('fente').value = 0;
+                setSliderKnown(document.getElementById('charge'), false);
+                setSliderKnown(document.getElementById('fente'), false);
                 document.getElementById('date-maturite').value = "";
             }
 
@@ -2346,7 +2612,11 @@
 
             const id = document.getElementById('hybrid-id').value;
             const decisionElement = document.querySelector('input[name="decision"]:checked');
-            const chargeVal = document.getElementById('charge').value;
+            const chargeSliderSave = document.getElementById('charge');
+            const fenteSliderSave = document.getElementById('fente');
+            const chargeKnown = sliderHasValue(chargeSliderSave);
+            const fenteKnown = sliderHasValue(fenteSliderSave);
+            const chargeVal = chargeKnown ? chargeSliderSave.value : "N/A";
             const dateVal = document.getElementById('date-maturite').value;
             let d = dataStore[id] || {};
             const tagMissingVal = !!d.tagMissing;
@@ -2360,12 +2630,12 @@
                 decision: decisionElement ? decisionElement.value : "",
                 date: dateVal,
                 charge: chargeVal,
-                fente: parseInt(chargeVal) === 0 ? "N/A" : document.getElementById('fente').value,
+                fente: (!chargeKnown || parseInt(chargeVal) === 0 || !fenteKnown) ? "N/A" : fenteSliderSave.value,
                 commentaire: document.getElementById('commentaire').value,
                 updatedAt: updatedAt
             };
 
-            if (parseInt(chargeVal) !== 0) {
+            if (chargeKnown && parseInt(chargeVal) !== 0) {
                 for(let i=1; i<=4; i++) { notation[`calibre-${i}`] = document.getElementById(`calibre-${i}`).value; }
                 for(let i=1; i<=4; i++) {
                     notation[`ferm-${i}a`] = document.getElementById(`ferm-${i}a`).value;
@@ -2461,22 +2731,22 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
                     "Statut": data.status === 'done' ? 'Évalué' : 'À faire',
                     "Etiquette à refaire": data.tagMissing ? "OUI" : "NON",
                     "Arbre coupé": (data.treeCut || data.status === 'cut') ? "OUI" : "NON", 
-                    "Décision": data.decision || "",
-                    "Date d'observation": data.date || "",
+                    "Décision": emptyToNA(data.decision),
+                    "Date d'observation": emptyToNA(data.date),
                     "Charge": data.charge !== undefined ? data.charge : "",
                     "Fente pistillaire": data.fente !== undefined ? data.fente : "",
-                    "Calibre F1": data["calibre-1"] || "",
-                    "Calibre F2": data["calibre-2"] || "",
-                    "Calibre F3": data["calibre-3"] || "",
-                    "Calibre F4": data["calibre-4"] || "",
-                    "Fermeté F1 Cuvette": data["ferm-1a"] || "",
-                    "Fermeté F1 Joue": data["ferm-1b"] || "",
-                    "Fermeté F2 Cuvette": data["ferm-2a"] || "",
-                    "Fermeté F2 Joue": data["ferm-2b"] || "",
-                    "Fermeté F3 Cuvette": data["ferm-3a"] || "",
-                    "Fermeté F3 Joue": data["ferm-3b"] || "",
-                    "Fermeté F4 Cuvette": data["ferm-4a"] || "",
-                    "Fermeté F4 Joue": data["ferm-4b"] || "",
+                    "Calibre F1": emptyToNA(data["calibre-1"]),
+                    "Calibre F2": emptyToNA(data["calibre-2"]),
+                    "Calibre F3": emptyToNA(data["calibre-3"]),
+                    "Calibre F4": emptyToNA(data["calibre-4"]),
+                    "Fermeté F1 Cuvette": emptyToNA(data["ferm-1a"]),
+                    "Fermeté F1 Joue": emptyToNA(data["ferm-1b"]),
+                    "Fermeté F2 Cuvette": emptyToNA(data["ferm-2a"]),
+                    "Fermeté F2 Joue": emptyToNA(data["ferm-2b"]),
+                    "Fermeté F3 Cuvette": emptyToNA(data["ferm-3a"]),
+                    "Fermeté F3 Joue": emptyToNA(data["ferm-3b"]),
+                    "Fermeté F4 Cuvette": emptyToNA(data["ferm-4a"]),
+                    "Fermeté F4 Joue": emptyToNA(data["ferm-4b"]),
                     "Nom Photo": data.photoName || "",
                     "Commentaire": data.commentaire || "",
                     "Dernière modification": data.updatedAt ? formatDateTimeForDisplay(data.updatedAt) : ""
