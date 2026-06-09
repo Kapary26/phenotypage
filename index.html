@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v21 - Correctifs ergonomie</title>
+    <title>Phénotypage v22 - Source photo</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -699,6 +699,46 @@
             margin: 0 0 14px 0;
         }
 
+        .photo-source-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            margin: 12px auto 0 auto;
+        }
+
+        .photo-source-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-app);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: none;
+        }
+
+        .photo-source-btn:active {
+            transform: scale(0.98);
+            background: var(--border-color);
+        }
+
+        .photo-source-btn.primary-photo {
+            background: rgba(0, 122, 255, 0.12);
+            border-color: rgba(0, 122, 255, 0.24);
+            color: var(--primary);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .photo-source-btn { background: rgba(118,118,128,0.18); }
+            .photo-source-btn.primary-photo { background: rgba(10,132,255,0.18); border-color: rgba(10,132,255,0.32); }
+        }
+
         .last-modified-line {
             color: var(--text-muted);
             text-align: center;
@@ -1028,11 +1068,16 @@
                     <div class="photo-upload-box" id="photo-box">
                         <div id="photo-placeholder" class="photo-placeholder">
                             <span class="camera-icon">📷</span>
-                            <span id="photo-label-text">Prendre une photo</span>
+                            <span id="photo-label-text">Ajouter une photo</span>
                         </div>
                         <img id="photo-preview" src="" alt="Aperçu de la photo">
                     </div>
+                    <div class="photo-source-actions">
+                        <button type="button" id="btn-camera-photo" class="photo-source-btn primary-photo">📷 Appareil</button>
+                        <button type="button" id="btn-library-photo" class="photo-source-btn">🖼️ Galerie / fichiers</button>
+                    </div>
                     <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
+                    <input type="file" id="photo-library-input" accept="image/*" style="display: none;">
                 </div>
 
                 <label>Calibre (4 fruits) :</label>
@@ -1073,8 +1118,9 @@
 
     <div id="photo-modal" class="modal-overlay">
         <div class="modal-content">
-            <h4>Que voulez-vous faire ?</h4>
-            <button type="button" id="btn-replace-photo" class="modal-btn text-primary">Remplacer la photo</button>
+            <h4>Photo des fruits</h4>
+            <button type="button" id="btn-modal-camera-photo" class="modal-btn text-primary">📷 Prendre une photo</button>
+            <button type="button" id="btn-modal-library-photo" class="modal-btn text-primary">🖼️ Choisir depuis galerie / fichiers</button>
             <button type="button" id="btn-delete-photo" class="modal-btn text-danger">Supprimer la photo</button>
             <button type="button" id="btn-cancel-photo" class="modal-btn text-bold">Annuler</button>
         </div>
@@ -1864,33 +1910,83 @@
             });
 
             const photoInput = document.getElementById('photo-input');
+            const photoLibraryInput = document.getElementById('photo-library-input');
             const photoBox = document.getElementById('photo-box');
             const photoPlaceholder = document.getElementById('photo-placeholder');
             const photoPreview = document.getElementById('photo-preview');
             const photoModal = document.getElementById('photo-modal');
 
+            function openCameraPhotoPicker() {
+                photoInput.value = "";
+                photoInput.click();
+            }
+
+            function openLibraryPhotoPicker() {
+                photoLibraryInput.value = "";
+                photoLibraryInput.click();
+            }
+
+            function handleSelectedPhoto(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round(height * MAX_WIDTH / width);
+                            width = MAX_WIDTH;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        currentTempPhoto = canvas.toDataURL('image/jpeg', 0.4);
+                        photoPreview.src = currentTempPhoto;
+                        photoPreview.style.display = 'block';
+                        photoPlaceholder.style.display = 'none';
+                    };
+                    img.onerror = function() {
+                        alert("Impossible de charger cette image.");
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
             photoBox.addEventListener('click', () => {
-                if (photoPreview.style.display === 'block') {
-                    photoModal.classList.add('active');
-                } else {
-                    photoInput.click();
-                }
+                photoModal.classList.add('active');
             });
 
-            document.getElementById('btn-replace-photo').addEventListener('click', () => {
+            document.getElementById('btn-camera-photo').addEventListener('click', openCameraPhotoPicker);
+            document.getElementById('btn-library-photo').addEventListener('click', openLibraryPhotoPicker);
+
+            document.getElementById('btn-modal-camera-photo').addEventListener('click', () => {
                 photoModal.classList.remove('active');
-                photoInput.click();
+                openCameraPhotoPicker();
+            });
+
+            document.getElementById('btn-modal-library-photo').addEventListener('click', () => {
+                photoModal.classList.remove('active');
+                openLibraryPhotoPicker();
             });
 
             document.getElementById('btn-delete-photo').addEventListener('click', () => {
                 photoModal.classList.remove('active');
-                currentTempPhoto = null; 
-                
+                currentTempPhoto = null;
+
                 photoInput.value = "";
+                photoLibraryInput.value = "";
                 photoPreview.src = "";
                 photoPreview.style.display = 'none';
                 photoPlaceholder.style.display = 'flex';
-                
+
                 const currentId = document.getElementById('hybrid-id').value;
                 if(photosStore[currentId]) {
                     delete photosStore[currentId];
@@ -1908,33 +2004,13 @@
 
             photoInput.addEventListener('change', () => {
                 if (photoInput.files && photoInput.files.length > 0) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 400; 
-                            let width = img.width;
-                            let height = img.height;
+                    handleSelectedPhoto(photoInput.files[0]);
+                }
+            });
 
-                            if (width > MAX_WIDTH) {
-                                height = Math.round(height * MAX_WIDTH / width);
-                                width = MAX_WIDTH;
-                            }
-                            canvas.width = width;
-                            canvas.height = height;
-                            
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-                            
-                            currentTempPhoto = canvas.toDataURL('image/jpeg', 0.4); 
-                            photoPreview.src = currentTempPhoto;
-                            photoPreview.style.display = 'block';
-                            photoPlaceholder.style.display = 'none';
-                        }
-                        img.src = e.target.result;
-                    }
-                    reader.readAsDataURL(photoInput.files[0]);
+            photoLibraryInput.addEventListener('change', () => {
+                if (photoLibraryInput.files && photoLibraryInput.files.length > 0) {
+                    handleSelectedPhoto(photoLibraryInput.files[0]);
                 }
             });
 
@@ -2185,6 +2261,8 @@
             document.querySelectorAll('input[name="decision"]').forEach(radio => { radio.checked = false; radio.dataset.wasChecked = 'false'; });
             
             document.getElementById('photo-input').value = "";
+            const photoLibraryInputReset = document.getElementById('photo-library-input');
+            if (photoLibraryInputReset) photoLibraryInputReset.value = "";
             const photoPlaceholder = document.getElementById('photo-placeholder');
             const photoPreview = document.getElementById('photo-preview');
             
