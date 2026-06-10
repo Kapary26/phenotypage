@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v36 - Bons géniteurs</title>
+    <title>Phénotypage v44 - Fusion géniteurs</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1400,6 +1400,65 @@
 
 
 
+
+
+        /* ===== v43 - Navigation rapide Croisements / Géniteurs ===== */
+        .crossing-subtabs {
+            position: sticky;
+            top: 62px;
+            z-index: 45;
+            background: var(--bg-app);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 8px 0 12px 0;
+            margin-bottom: 8px;
+        }
+        .crossing-subtab-btn {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 11px 8px;
+            font-size: 13px;
+            font-weight: 850;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+            white-space: nowrap;
+        }
+        .crossing-subtab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .crossing-tab-panel { display: none; }
+        .crossing-tab-panel.active { display: block; }
+        .compact-toggle-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-weight: 850;
+            text-align: center;
+        }
+        #cross-create-card { display: none; }
+        #cross-create-card.active { display: block; }
+        .crossing-search-card,
+        .genitor-search-card {
+            position: sticky;
+            top: 122px;
+            z-index: 40;
+            padding-bottom: 14px;
+        }
+        .crossing-search-card h3,
+        .genitor-search-card h3 { margin-bottom: 10px; }
+        @media (prefers-color-scheme: dark) {
+            .crossing-subtabs { background: var(--bg-app); }
+            .crossing-subtab-btn { background: #1c1c1e; border-color: #38383a; }
+            .crossing-subtab-btn.active { background: var(--primary); border-color: var(--primary); }
+        }
+
         /* ===== v41 - Croix de suppression dans les barres de recherche ===== */
         .search-clear-wrapper {
             position: relative;
@@ -1443,6 +1502,28 @@
                 color: #d1d1d6;
             }
         }
+
+
+
+        /* ===== v42 - Répertoire des géniteurs ===== */
+        .genitor-management-row {
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .genitor-row-title { font-weight: 900; color: var(--text-main); font-size: 15px; line-height: 1.25; }
+        .genitor-row-sub { color: var(--text-muted); font-weight: 750; font-size: 12px; margin-top: 3px; }
+        .genitor-row-actions { display: flex; gap: 8px; }
+        .genitor-action-btn { flex: 1; padding: 11px 12px; border-radius: 12px; font-size: 14px; }
+        .genitor-edit-btn { background: var(--primary); }
+        .genitor-edit-panel { display: none; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .genitor-edit-panel.active { display: block; }
+        .genitor-save-edit-btn { width: 100%; margin-top: 10px; background: var(--success); font-size: 14px; padding: 12px; }
+        .genitor-cancel-edit-btn { width: 100%; margin-top: 8px; background: var(--text-muted); font-size: 14px; padding: 12px; }
 
 </style>
 </head>
@@ -1562,29 +1643,49 @@
         </div>
 
         <div id="management-panel-crossings" class="management-panel">
-            <button type="button" class="btn-management-subback" data-management-section="home">⬅ Gestion</button>
-            <div class="card">
-                <h3>➕ Créer un croisement</h3>
-                <div class="cross-create-row">
-                    <div>
-                        <label>Variété A :</label>
-                        <input type="text" id="cross-create-a" placeholder="Ex. 0621">
-                    </div>
-                    <div class="cross-x-separator">x</div>
-                    <div>
-                        <label>Variété B :</label>
-                        <input type="text" id="cross-create-b" placeholder="Ex. CAKECANDY">
-                    </div>
-                </div>
-                <button id="btn-create-crossing" type="button" class="btn-success btn-large management-action-btn">Créer le croisement</button>
-                <div class="crossing-tip">Le croisement sera enregistré au format : Variété A x Variété B.</div>
+            <div class="crossing-subtabs" aria-label="Navigation croisements">
+                <button type="button" id="btn-crossing-tab-crossings" class="crossing-subtab-btn active" data-crossing-tab="crossings">🧬 Croisements</button>
+                <button type="button" id="btn-crossing-tab-genitors" class="crossing-subtab-btn" data-crossing-tab="genitors">🌱 Géniteurs</button>
             </div>
 
-            <div class="card">
-                <h3>✏️ Modifier un croisement</h3>
-                <label>Rechercher :</label>
-                <input type="text" id="manage-crossing-search" placeholder="Rechercher un croisement">
+            <div id="crossing-tab-crossings" class="crossing-tab-panel active">
+                <div class="card">
+                    <button type="button" id="btn-toggle-create-crossing" class="compact-toggle-btn">➕ Créer un croisement</button>
+                </div>
+
+                <div class="card" id="cross-create-card">
+                    <h3>➕ Nouveau croisement</h3>
+                    <div class="cross-create-row">
+                        <div>
+                            <label>Variété A :</label>
+                            <input type="text" id="cross-create-a" placeholder="Ex. 0621">
+                        </div>
+                        <div class="cross-x-separator">x</div>
+                        <div>
+                            <label>Variété B :</label>
+                            <input type="text" id="cross-create-b" placeholder="Ex. CAKECANDY">
+                        </div>
+                    </div>
+                    <button id="btn-create-crossing" type="button" class="btn-success btn-large management-action-btn">Créer le croisement</button>
+                    <div class="crossing-tip">Le croisement sera enregistré au format : Variété A x Variété B.</div>
+                </div>
+
+                <div class="card crossing-search-card">
+                    <h3>✏️ Croisements</h3>
+                    <label>Rechercher :</label>
+                    <input type="text" id="manage-crossing-search" placeholder="Rechercher un croisement">
+                </div>
                 <div id="manage-crossing-results" class="management-results"></div>
+            </div>
+
+            <div id="crossing-tab-genitors" class="crossing-tab-panel">
+                <div class="card genitor-search-card">
+                    <h3>🌱 Géniteurs</h3>
+                    <div class="crossing-tip">Modifier un géniteur ici met à jour automatiquement tous les croisements où il apparaît.</div>
+                    <label>Rechercher :</label>
+                    <input type="text" id="manage-genitor-search" placeholder="Rechercher un géniteur">
+                </div>
+                <div id="manage-genitor-results" class="management-results"></div>
             </div>
         </div>
     </div>
@@ -1827,7 +1928,7 @@
         function updateCrossingDatalist() {
             const datalist = document.getElementById('crossing-options');
             if (!datalist) return;
-            datalist.innerHTML = getAllCrossings().map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+            datalist.innerHTML = getAllCrossings().map(c => `<option value="${escapeHtml(c)}"></option>`).join('\n');
         }
 
         function countTreesForCrossing(crossingName) {
@@ -1942,7 +2043,7 @@
         }
 
         function getHybridSummary(data) {
-            if (!data || data.status !== 'done') return '';
+            if (!data) return '';
             const parts = [];
             if (data.charge !== undefined && data.charge !== '') parts.push(`Charge ${data.charge}`);
             if (data.fente !== undefined && data.fente !== '' && data.fente !== 'N/A') parts.push(`Fente ${data.fente}`);
@@ -1983,7 +2084,7 @@
 
             hybridesInitiaux.forEach(h => {
                 const d = dataStore[h.id] || {};
-                const isDone = d.status === 'done';
+                const isDone = !!d.decision;
                 const isTag = !!d.tagMissing;
                 const isCut = !!(d.treeCut || d.status === 'cut');
                 const cross = h.croisement || 'Croisement inconnu';
@@ -2132,7 +2233,7 @@
                     const d = dataStore[h.id] || {};
                     g.total++;
                     if (h.croisement) g.crosses.add(h.croisement);
-                    if (d.status === 'done') {
+                    if (d.decision) {
                         g.done++;
                         if (d.decision === 'Eliminer') g.decisions.eliminer++;
                         else if (d.decision === 'Poursuivre') g.decisions.poursuivre++;
@@ -2486,7 +2587,7 @@
             const startIndex = Math.max(0, hybridesInitiaux.findIndex(h => h.id === currentId));
             for (let i = startIndex + 1; i < hybridesInitiaux.length; i++) {
                 const d = dataStore[hybridesInitiaux[i].id] || {};
-                if (d.status !== 'done') return hybridesInitiaux[i];
+                if (!d.decision) return hybridesInitiaux[i];
             }
             return null;
         }
@@ -2901,8 +3002,22 @@ function processExcelData(dataArray) {
             const goCrossingsBtn = document.getElementById('btn-management-go-crossings');
             if (goCrossingsBtn) goCrossingsBtn.addEventListener('click', () => setManagementSection('crossings'));
             document.querySelectorAll('.btn-management-subback').forEach(btn => btn.addEventListener('click', () => setManagementSection('home')));
+            document.querySelectorAll('.crossing-subtab-btn').forEach(btn => {
+                btn.addEventListener('click', () => setCrossingManagementTab(btn.dataset.crossingTab));
+            });
+            const toggleCreateCrossingBtn = document.getElementById('btn-toggle-create-crossing');
+            if (toggleCreateCrossingBtn) {
+                toggleCreateCrossingBtn.addEventListener('click', () => {
+                    const card = document.getElementById('cross-create-card');
+                    if (!card) return;
+                    card.classList.toggle('active');
+                    toggleCreateCrossingBtn.textContent = card.classList.contains('active') ? '− Fermer la création' : '➕ Créer un croisement';
+                });
+            }
             document.getElementById('btn-create-crossing').addEventListener('click', createCrossingFromManagement);
             document.getElementById('manage-crossing-search').addEventListener('input', renderCrossingManagementList);
+            const genitorSearchInput = document.getElementById('manage-genitor-search');
+            if (genitorSearchInput) genitorSearchInput.addEventListener('input', renderGenitorManagementList);
             document.getElementById('manage-add-cross').addEventListener('focus', updateCrossingDatalist);
 
             document.getElementById('btn-import').addEventListener('click', () => {
@@ -3172,6 +3287,28 @@ function processExcelData(dataArray) {
             });
         }
 
+
+
+        function updateCrossingTabCounters() {
+            const crossingBtn = document.getElementById('btn-crossing-tab-crossings');
+            const genitorBtn = document.getElementById('btn-crossing-tab-genitors');
+            if (crossingBtn) crossingBtn.textContent = `🧬 Croisements ${getAllCrossings().length}`;
+            if (genitorBtn) genitorBtn.textContent = `🌱 Géniteurs ${getGenitorDirectory().length}`;
+        }
+
+        function setCrossingManagementTab(tabName) {
+            const tab = tabName === 'genitors' ? 'genitors' : 'crossings';
+            document.querySelectorAll('.crossing-subtab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.crossingTab === tab);
+            });
+            document.querySelectorAll('.crossing-tab-panel').forEach(panel => panel.classList.remove('active'));
+            const target = document.getElementById(`crossing-tab-${tab}`);
+            if (target) target.classList.add('active');
+            updateCrossingTabCounters();
+            if (tab === 'crossings') renderCrossingManagementList();
+            if (tab === 'genitors') renderGenitorManagementList();
+        }
+
         function setManagementSection(sectionName) {
             const valid = ['home', 'trees', 'crossings'];
             const section = valid.includes(sectionName) ? sectionName : 'home';
@@ -3188,7 +3325,9 @@ function processExcelData(dataArray) {
             }
             if (section === 'crossings') {
                 updateCrossingDatalist();
-                renderCrossingManagementList();
+                updateCrossingTabCounters();
+                const activeTab = document.querySelector('.crossing-subtab-btn.active')?.dataset?.crossingTab || 'crossings';
+                setCrossingManagementTab(activeTab);
             }
         }
 
@@ -3197,6 +3336,7 @@ function processExcelData(dataArray) {
         }
 
         function renderCrossingManagementList() {
+            updateCrossingTabCounters();
             const container = document.getElementById('manage-crossing-results');
             if (!container) return;
             const term = normalizeSearchText(document.getElementById('manage-crossing-search') ? document.getElementById('manage-crossing-search').value : '');
@@ -3287,7 +3427,13 @@ function processExcelData(dataArray) {
                 document.getElementById('cross-create-a').value = '';
                 document.getElementById('cross-create-b').value = '';
                 updateCrossingDatalist();
+                updateCrossingTabCounters();
                 renderCrossingManagementList();
+                renderGenitorManagementList();
+                const createCard = document.getElementById('cross-create-card');
+                const createToggle = document.getElementById('btn-toggle-create-crossing');
+                if (createCard) createCard.classList.remove('active');
+                if (createToggle) createToggle.textContent = '➕ Créer un croisement';
                 showToast('Croisement créé ✅');
             });
         }
@@ -3341,6 +3487,7 @@ function processExcelData(dataArray) {
             saveDataLocally().then(() => {
                 updateCrossingDatalist();
                 renderCrossingManagementList();
+                renderGenitorManagementList();
                 showToast('Croisement supprimé ✅');
             });
         }
@@ -3424,10 +3571,10 @@ function processExcelData(dataArray) {
                     croisementActuel = h.croisement; 
                 }
 
-                let etat = dataStore[h.id] ? dataStore[h.id].status : 'pending';
-                let tagMissing = dataStore[h.id] ? dataStore[h.id].tagMissing : false;
-                let treeCut = dataStore[h.id] ? (dataStore[h.id].treeCut || dataStore[h.id].status === 'cut') : false;
-                if (etat === 'cut') etat = 'pending';
+                const hData = dataStore[h.id] || {};
+                let etat = hData.decision ? 'done' : 'pending';
+                let tagMissing = !!hData.tagMissing;
+                let treeCut = !!(hData.treeCut || hData.status === 'cut');
                 
                 if (etat === 'done') doneCount++;
                 if (tagMissing) tagCount++;
@@ -3680,7 +3827,7 @@ document.getElementById('phenotype-form').addEventListener('submit', (e) => {
             const updatedAt = new Date().toISOString();
             
             const notation = {
-                status: 'done',
+                status: decisionElement ? 'done' : 'pending',
                 tagMissing: tagMissingVal,
                 treeCut: treeCutVal, 
                 decision: decisionElement ? decisionElement.value : "",
@@ -3772,11 +3919,11 @@ document.getElementById('phenotype-form').addEventListener('submit', (e) => {
                 const data = dataStore[h.id] || {};
                 const chargeVal = safeNumber(data.charge);
                 const fenteVal = safeNumber(data.fente);
-                if (data.status === 'done') acc.done++;
+                if (data.decision) acc.done++;
                 if (data.tagMissing) acc.tags++;
                 if (data.treeCut || data.status === 'cut') acc.cuts++;
                 if (photosStore[h.id] && data.charge !== "0" && data.charge !== 0) acc.photos++;
-                if (data.status === 'done' && !data.date) acc.noDate++;
+                if (data.decision && !data.date) acc.noDate++;
                 if (data.date && !data.decision) acc.noDecision++;
                 if (chargeVal !== null && chargeVal > 0 && fenteVal === null) acc.noFente++;
                 if (chargeVal !== null && chargeVal > 0 && !photosStore[h.id]) acc.noPhoto++;
@@ -3817,7 +3964,7 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
                     "DENOMINATIONS": h.croisement, 
                     "RANG": h.rang,
                     "ARBRE": h.arbre,
-                    "Statut": data.status === 'done' ? 'Évalué' : 'À faire',
+                    "Statut": data.decision ? 'Évalué' : 'À faire',
                     "Etiquette à refaire": data.tagMissing ? "OUI" : "NON",
                     "Arbre coupé": (data.treeCut || data.status === 'cut') ? "OUI" : "NON", 
                     "Décision": emptyToNA(data.decision),
@@ -3843,7 +3990,7 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
                     "Dernière modification": data.updatedAt ? formatDateTimeForDisplay(data.updatedAt) : ""
                 });
                 
-                if (data.status === 'done' && photosStore[h.id] && data.charge !== "0" && data.charge !== 0) {
+                if (data.decision && photosStore[h.id] && data.charge !== "0" && data.charge !== 0) {
                     const base64Data = photosStore[h.id].replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
                     photoFolder.file(`${h.id}.jpg`, base64Data, {base64: true});
                 }
@@ -3866,13 +4013,181 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
         });
 
 
+
+        // ===== v42 - Statut évalué basé sur la décision + répertoire des géniteurs =====
+        function normalizeGenitorName(value) {
+            return cleanCrossingPart(value)
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/\s+/g, ' ')
+                .toLowerCase();
+        }
+
+        function getGenitorDirectory() {
+            const genitorMap = new Map();
+            getAllCrossings().forEach(crossing => {
+                const parents = splitCrossingParents(crossing);
+                [parents.a, parents.b].forEach(parent => {
+                    const name = cleanCrossingPart(parent);
+                    if (!name) return;
+                    const key = normalizeGenitorName(name);
+                    if (!genitorMap.has(key)) {
+                        genitorMap.set(key, { name, crossings: new Set(), trees: 0 });
+                    }
+                    genitorMap.get(key).crossings.add(crossing);
+                });
+            });
+            hybridesInitiaux.forEach(h => {
+                const parents = splitCrossingParents(h.croisement || '');
+                [parents.a, parents.b].forEach(parent => {
+                    const key = normalizeGenitorName(parent);
+                    if (genitorMap.has(key)) genitorMap.get(key).trees += 1;
+                });
+            });
+            return [...genitorMap.values()]
+                .map(g => ({ ...g, crossingCount: g.crossings.size }))
+                .sort((a, b) => a.name.localeCompare(b.name, 'fr', { numeric: true, sensitivity: 'base' }));
+        }
+
+        function formatCrossingReplacingGenitor(crossingName, oldKey, newName) {
+            const parents = splitCrossingParents(crossingName);
+            if (!parents.a || !parents.b) return crossingName;
+            const newA = normalizeGenitorName(parents.a) === oldKey ? newName : parents.a;
+            const newB = normalizeGenitorName(parents.b) === oldKey ? newName : parents.b;
+            return formatCrossingFromParents(newA, newB);
+        }
+
+        function renameGenitorGlobally(oldName, newNameRaw) {
+            const cleanedOld = cleanCrossingPart(oldName);
+            const cleanedNew = cleanCrossingPart(newNameRaw);
+            if (!cleanedOld || !cleanedNew) {
+                alert('Le nom du géniteur est vide.');
+                return;
+            }
+            const oldKey = normalizeGenitorName(cleanedOld);
+            const newKey = normalizeGenitorName(cleanedNew);
+            if (oldKey === newKey) {
+                showToast('Aucun changement');
+                return;
+            }
+
+            const genitors = getGenitorDirectory();
+            const targetExists = genitors.some(g => normalizeGenitorName(g.name) === newKey);
+
+            const impactedCrossings = getAllCrossings().filter(c => {
+                const p = splitCrossingParents(c);
+                return normalizeGenitorName(p.a) === oldKey || normalizeGenitorName(p.b) === oldKey;
+            });
+            const impactedTreeCount = hybridesInitiaux.filter(h => {
+                const p = splitCrossingParents(h.croisement || '');
+                return normalizeGenitorName(p.a) === oldKey || normalizeGenitorName(p.b) === oldKey;
+            }).length;
+
+            if (!impactedCrossings.length) {
+                alert('Aucun croisement concerné par ce géniteur.');
+                return;
+            }
+
+            const previewCrossings = impactedCrossings
+                .slice(0, 5)
+                .map(c => `${c} → ${formatCrossingReplacingGenitor(c, oldKey, cleanedNew)}`)
+                .join('\n');
+            const extraPreview = impactedCrossings.length > 5 ? `
+... + ${impactedCrossings.length - 5} autre${impactedCrossings.length - 5 > 1 ? 's' : ''}` : '';
+
+            const msg = targetExists
+                ? `Le géniteur « ${cleanedNew} » existe déjà.
+
+Fusionner « ${cleanedOld} » avec « ${cleanedNew} » ?
+
+Cela modifiera ${impactedCrossings.length} croisement${impactedCrossings.length > 1 ? 's' : ''} et ${impactedTreeCount} arbre${impactedTreeCount > 1 ? 's' : ''}.
+
+${previewCrossings}${extraPreview}
+
+Confirmer ?`
+                : `Renommer ce géniteur modifiera ${impactedCrossings.length} croisement${impactedCrossings.length > 1 ? 's' : ''} et ${impactedTreeCount} arbre${impactedTreeCount > 1 ? 's' : ''}.
+
+${cleanedOld}
+→ ${cleanedNew}
+
+${previewCrossings}${extraPreview}
+
+Confirmer ?`;
+            if (!confirm(msg)) return;
+
+            hybridesInitiaux.forEach(h => {
+                h.croisement = formatCrossingReplacingGenitor(h.croisement || '', oldKey, cleanedNew);
+            });
+            crossingCatalog = mergeCrossingLists((crossingCatalog || []).map(c => formatCrossingReplacingGenitor(c, oldKey, cleanedNew)), getHybridCrossings());
+            saveDataLocally().then(() => {
+                updateCrossingDatalist();
+                updateCrossingTabCounters();
+                renderCrossingManagementList();
+                renderGenitorManagementList();
+                renderManagementList();
+                renderList();
+                showToast(targetExists ? 'Géniteurs fusionnés ✅' : 'Géniteur renommé ✅');
+            });
+        }
+
+        function renderGenitorManagementList() {
+            updateCrossingTabCounters();
+            const container = document.getElementById('manage-genitor-results');
+            if (!container) return;
+            const term = normalizeSearchText(document.getElementById('manage-genitor-search') ? document.getElementById('manage-genitor-search').value : '');
+            const genitors = getGenitorDirectory().filter(g => !term || normalizeSearchText(g.name).includes(term));
+            if (!genitors.length) {
+                container.innerHTML = '<div class="stats-empty">Aucun géniteur trouvé.</div>';
+                return;
+            }
+            container.innerHTML = genitors.map((g, index) => `
+                <div class="genitor-management-row">
+                    <div>
+                        <div class="genitor-row-title">${escapeHtml(g.name)}</div>
+                        <div class="genitor-row-sub">${g.crossingCount} croisement${g.crossingCount > 1 ? 's' : ''} · ${g.trees} arbre${g.trees > 1 ? 's' : ''} associé${g.trees > 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="genitor-row-actions">
+                        <button type="button" class="genitor-action-btn genitor-edit-btn" data-genitor-edit="${index}">Modifier</button>
+                    </div>
+                    <div class="genitor-edit-panel" data-genitor-edit-panel="${index}">
+                        <label>Nouveau nom du géniteur :</label>
+                        <input type="text" value="${escapeHtml(g.name)}" data-genitor-edit-input="${index}" placeholder="Nom du géniteur">
+                        <button type="button" class="genitor-save-edit-btn" data-genitor-save="${index}" data-old-genitor="${escapeHtml(g.name)}">Enregistrer la modification</button>
+                        <button type="button" class="genitor-cancel-edit-btn" data-genitor-cancel="${index}">Annuler</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('[data-genitor-edit]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const panel = container.querySelector(`[data-genitor-edit-panel="${btn.dataset.genitorEdit}"]`);
+                    if (panel) panel.classList.toggle('active');
+                });
+            });
+            container.querySelectorAll('[data-genitor-cancel]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const panel = container.querySelector(`[data-genitor-edit-panel="${btn.dataset.genitorCancel}"]`);
+                    if (panel) panel.classList.remove('active');
+                });
+            });
+            container.querySelectorAll('[data-genitor-save]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = container.querySelector(`[data-genitor-edit-input="${btn.dataset.genitorSave}"]`);
+                    renameGenitorGlobally(btn.dataset.oldGenitor, input ? input.value : '');
+                });
+            });
+        }
+
+        // Mise à jour initiale si l'utilisateur ouvre directement la gestion des croisements
+        renderGenitorManagementList();
+
         // ===== v41 - Croix de suppression pour toutes les barres de recherche =====
         function setupSearchClearButtons() {
             const ids = [
                 'search-input',
                 'manage-add-cross',
                 'manage-delete-search',
-                'manage-crossing-search'
+                'manage-crossing-search',
+                'manage-genitor-search'
             ];
 
             ids.forEach(id => {
