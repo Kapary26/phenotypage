@@ -1285,6 +1285,63 @@
             .crossing-rename-row { grid-template-columns: 1fr; }
         }
 
+        /* ===== v40 - Gestion croisements mobile ===== */
+        .crossing-management-row.v40 {
+            gap: 12px;
+        }
+        .crossing-row-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .crossing-action-btn {
+            padding: 12px 10px;
+            font-size: 14px;
+            border-radius: 14px;
+            font-weight: 850;
+            min-height: 44px;
+        }
+        .crossing-edit-btn { background: var(--primary); }
+        .crossing-delete-btn { background: var(--danger); }
+        .crossing-edit-panel {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .crossing-edit-panel.active { display: block; }
+        .crossing-edit-title {
+            font-size: 13px;
+            font-weight: 850;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            margin-bottom: 10px;
+        }
+        .crossing-edit-actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .crossing-save-edit-btn {
+            background: var(--success);
+            padding: 12px 10px;
+            font-size: 14px;
+            border-radius: 14px;
+        }
+        .crossing-cancel-edit-btn {
+            background: var(--text-muted);
+            padding: 12px 10px;
+            font-size: 14px;
+            border-radius: 14px;
+        }
+        @media (max-width: 390px) {
+            .crossing-edit-actions { grid-template-columns: 1fr; }
+        }
+
+
 
 
         /* ===== v38 - Navigation Gestion séparée ===== */
@@ -1340,6 +1397,52 @@
         .menu-management-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #management-panel-home { display: none !important; }
         .btn-management-subback { display: none !important; }
+
+
+
+        /* ===== v41 - Croix de suppression dans les barres de recherche ===== */
+        .search-clear-wrapper {
+            position: relative;
+            width: 100%;
+            display: block;
+        }
+        .search-clear-wrapper input[type="text"] {
+            padding-right: 48px !important;
+        }
+        .search-clear-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            border: none;
+            background: rgba(142, 142, 147, 0.18);
+            color: var(--text-muted);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 900;
+            box-shadow: none;
+            z-index: 2;
+        }
+        .search-clear-wrapper.has-value .search-clear-btn {
+            display: flex;
+        }
+        .search-clear-btn:active {
+            transform: translateY(-50%) scale(0.92);
+            background: rgba(142, 142, 147, 0.30);
+        }
+        @media (prefers-color-scheme: dark) {
+            .search-clear-btn {
+                background: rgba(142, 142, 147, 0.25);
+                color: #d1d1d6;
+            }
+        }
 
 </style>
 </head>
@@ -1678,6 +1781,17 @@
             const b = cleanCrossingPart(parentB);
             if (!a || !b) return '';
             return `${a} x ${b}`;
+        }
+
+        function splitCrossingParents(crossingName) {
+            const raw = cleanCrossingPart(crossingName);
+            const parts = raw.split(/\s+[xX×]\s+/);
+            if (parts.length >= 2) {
+                const a = cleanCrossingPart(parts[0]);
+                const b = cleanCrossingPart(parts.slice(1).join(' x '));
+                return { a, b };
+            }
+            return { a: raw, b: '' };
         }
 
         function normalizeCrossingName(value) {
@@ -3093,25 +3207,65 @@ function processExcelData(dataArray) {
             }
             container.innerHTML = crossings.map((c, index) => {
                 const count = countTreesForCrossing(c);
+                const parents = splitCrossingParents(c);
                 return `
-                    <div class="crossing-management-row">
+                    <div class="crossing-management-row v40">
                         <div>
                             <div class="crossing-row-title">${escapeHtml(c)}</div>
                             <div class="crossing-row-sub">${count} arbre${count > 1 ? 's' : ''} associé${count > 1 ? 's' : ''}</div>
                         </div>
-                        <div class="crossing-rename-row">
-                            <input type="text" value="${escapeHtml(c)}" data-crossing-rename-input="${index}" aria-label="Nouveau nom du croisement">
-                            <button type="button" class="crossing-rename-btn" data-crossing-rename="${index}" data-old-crossing="${escapeHtml(c)}">Renommer</button>
+                        <div class="crossing-row-actions">
+                            <button type="button" class="crossing-action-btn crossing-edit-btn" data-crossing-edit="${index}">Modifier</button>
+                            <button type="button" class="crossing-action-btn crossing-delete-btn" data-crossing-delete="${index}" data-old-crossing="${escapeHtml(c)}">Supprimer</button>
+                        </div>
+                        <div class="crossing-edit-panel" data-crossing-edit-panel="${index}">
+                            <div class="crossing-edit-title">Modifier le croisement</div>
+                            <div class="cross-create-row">
+                                <div>
+                                    <label>Variété A :</label>
+                                    <input type="text" value="${escapeHtml(parents.a)}" data-crossing-edit-a="${index}" placeholder="Variété A">
+                                </div>
+                                <div class="cross-x-separator">x</div>
+                                <div>
+                                    <label>Variété B :</label>
+                                    <input type="text" value="${escapeHtml(parents.b)}" data-crossing-edit-b="${index}" placeholder="Variété B">
+                                </div>
+                            </div>
+                            <div class="crossing-edit-actions">
+                                <button type="button" class="crossing-save-edit-btn" data-crossing-save="${index}" data-old-crossing="${escapeHtml(c)}">Enregistrer la modification</button>
+                                <button type="button" class="crossing-cancel-edit-btn" data-crossing-cancel="${index}">Annuler</button>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
-            container.querySelectorAll('[data-crossing-rename]').forEach(btn => {
+            container.querySelectorAll('[data-crossing-edit]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const index = btn.dataset.crossingRename;
-                    const input = container.querySelector(`[data-crossing-rename-input="${index}"]`);
-                    renameCrossing(btn.dataset.oldCrossing, input ? input.value : '');
+                    const panel = container.querySelector(`[data-crossing-edit-panel="${btn.dataset.crossingEdit}"]`);
+                    if (panel) panel.classList.toggle('active');
                 });
+            });
+            container.querySelectorAll('[data-crossing-cancel]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const panel = container.querySelector(`[data-crossing-edit-panel="${btn.dataset.crossingCancel}"]`);
+                    if (panel) panel.classList.remove('active');
+                });
+            });
+            container.querySelectorAll('[data-crossing-save]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const index = btn.dataset.crossingSave;
+                    const inputA = container.querySelector(`[data-crossing-edit-a="${index}"]`);
+                    const inputB = container.querySelector(`[data-crossing-edit-b="${index}"]`);
+                    const newCrossing = formatCrossingFromParents(inputA ? inputA.value : '', inputB ? inputB.value : '');
+                    if (!newCrossing) {
+                        alert('Renseigne une variété A et une variété B.');
+                        return;
+                    }
+                    renameCrossing(btn.dataset.oldCrossing, newCrossing);
+                });
+            });
+            container.querySelectorAll('[data-crossing-delete]').forEach(btn => {
+                btn.addEventListener('click', () => deleteCrossing(btn.dataset.oldCrossing));
             });
         }
 
@@ -3170,6 +3324,24 @@ function processExcelData(dataArray) {
                 renderList();
                 if (document.getElementById('view-stats').classList.contains('active')) updateStatsView();
                 showToast('Croisement renommé ✅');
+            });
+        }
+
+        function deleteCrossing(crossingName) {
+            const cleaned = cleanCrossingPart(crossingName);
+            if (!cleaned) return;
+            const count = countTreesForCrossing(cleaned);
+            if (count > 0) {
+                alert(`Impossible de supprimer ce croisement : ${count} arbre${count > 1 ? 's' : ''} y ${count > 1 ? 'sont associés' : 'est associé'}.\n\nRenomme-le ou modifie d'abord les arbres concernés.`);
+                return;
+            }
+            if (!confirm(`Supprimer le croisement « ${cleaned} » de la liste ?`)) return;
+            const key = normalizeCrossingName(cleaned);
+            crossingCatalog = (crossingCatalog || []).filter(c => normalizeCrossingName(c) !== key);
+            saveDataLocally().then(() => {
+                updateCrossingDatalist();
+                renderCrossingManagementList();
+                showToast('Croisement supprimé ✅');
             });
         }
 
@@ -3692,6 +3864,54 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
                 showToast("Export généré ✅");
             });
         });
+
+
+        // ===== v41 - Croix de suppression pour toutes les barres de recherche =====
+        function setupSearchClearButtons() {
+            const ids = [
+                'search-input',
+                'manage-add-cross',
+                'manage-delete-search',
+                'manage-crossing-search'
+            ];
+
+            ids.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input || input.dataset.clearReady === '1') return;
+                input.dataset.clearReady = '1';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'search-clear-wrapper';
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'search-clear-btn';
+                btn.setAttribute('aria-label', 'Effacer la recherche');
+                btn.textContent = '×';
+                wrapper.appendChild(btn);
+
+                const refresh = () => {
+                    wrapper.classList.toggle('has-value', String(input.value || '').length > 0);
+                };
+
+                input.addEventListener('input', refresh);
+                input.addEventListener('change', refresh);
+                btn.addEventListener('click', () => {
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    refresh();
+                    input.focus();
+                });
+
+                refresh();
+            });
+        }
+
+        setupSearchClearButtons();
+
     </script>
 </body>
 </html>
