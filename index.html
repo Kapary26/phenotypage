@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phénotypage v35 -  v25 - Interface terrain</title>
+    <title>Phénotypage v36 - Bons géniteurs</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1173,6 +1173,47 @@
             display: block !important;
         }
 
+
+        /* ===== v36 - Ordre rang/arbre, bouton sauvegarde rapproché et stats géniteurs ===== */
+        #btn-save-hybrid.sticky-btn {
+            position: static !important;
+            display: block !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: none !important;
+            width: fit-content !important;
+            max-width: calc(100vw - 48px) !important;
+            margin: 12px auto 22px auto !important;
+            padding: 15px 24px !important;
+            border-radius: 18px !important;
+            box-shadow: 0 4px 14px rgba(52, 199, 89, 0.26) !important;
+            white-space: nowrap !important;
+        }
+
+        #phenotype-form {
+            padding-bottom: 28px !important;
+        }
+
+        .genitor-rank-card {
+            border-left: 5px solid var(--primary);
+        }
+
+        .genitor-parent-role {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 800;
+            margin-top: -4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .genitor-score-pill {
+            background: rgba(52, 199, 89, 0.14);
+            color: var(--success);
+        }
+
 </style>
 </head>
 <body>
@@ -1458,24 +1499,24 @@
         let dateFilter = { mode: null, start: '', end: '' };
 
         function sortHybrids(hybrids) {
-            const croisementMinRang = {};
-            hybrids.forEach(h => {
-                if (croisementMinRang[h.croisement] === undefined) {
-                    croisementMinRang[h.croisement] = h.rang;
-                } else {
-                    croisementMinRang[h.croisement] = Math.min(croisementMinRang[h.croisement], h.rang);
-                }
-            });
+            const toOrderNumber = (value) => {
+                const raw = String(value ?? '').trim();
+                const match = raw.match(/-?\d+/);
+                if (!match) return Number.MAX_SAFE_INTEGER;
+                const n = parseInt(match[0], 10);
+                return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+            };
 
             hybrids.sort((a, b) => {
-                const minA = croisementMinRang[a.croisement];
-                const minB = croisementMinRang[b.croisement];
-                
-                if (minA !== minB) return minA - minB;
-                if (a.croisement !== b.croisement) return a.croisement.localeCompare(b.croisement);
-                if (a.rang !== b.rang) return a.rang - b.rang;
-                
-                return a.arbre - b.arbre;
+                const rangA = toOrderNumber(a.rang);
+                const rangB = toOrderNumber(b.rang);
+                if (rangA !== rangB) return rangA - rangB;
+
+                const arbreA = toOrderNumber(a.arbre);
+                const arbreB = toOrderNumber(b.arbre);
+                if (arbreA !== arbreB) return arbreA - arbreB;
+
+                return String(a.croisement || '').localeCompare(String(b.croisement || ''), 'fr', { numeric: true, sensitivity: 'base' });
             });
         }
 
@@ -1697,6 +1738,116 @@
             `;
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function cleanGenitorName(value, side) {
+            let text = String(value || '').replace(/\s+/g, ' ').trim();
+            if (!text) return '';
+            const slashParts = text.split('/').map(p => p.trim()).filter(Boolean);
+            if (slashParts.length > 1) {
+                text = side === 'left' ? slashParts[slashParts.length - 1] : slashParts[0];
+            }
+            return text.replace(/\s+/g, ' ').trim();
+        }
+
+        function extractGenitorsFromCross(crossName) {
+            const cross = String(crossName || '').replace(/\s+/g, ' ').trim();
+            if (!cross) return [];
+            const parts = cross.split(/\s+(?:x|X|×)\s+/);
+            if (parts.length < 2) return [];
+            const left = cleanGenitorName(parts[0], 'left');
+            const right = cleanGenitorName(parts.slice(1).join(' X '), 'right');
+            return [...new Set([left, right].filter(Boolean))];
+        }
+
+        function createEmptyGenitorStats(name) {
+            return {
+                name,
+                total: 0,
+                done: 0,
+                decisions: { eliminer: 0, poursuivre: 0, selectionner: 0, none: 0 },
+                chargeKnown: 0,
+                chargeSum: 0,
+                fenteKnown: 0,
+                fenteSum: 0,
+                crosses: new Set()
+            };
+        }
+
+        function calculateGenitorStats() {
+            const map = new Map();
+            hybridesInitiaux.forEach(h => {
+                const genitors = extractGenitorsFromCross(h.croisement);
+                if (!genitors.length) return;
+                genitors.forEach(name => {
+                    if (!map.has(name)) map.set(name, createEmptyGenitorStats(name));
+                    const g = map.get(name);
+                    const d = dataStore[h.id] || {};
+                    g.total++;
+                    if (h.croisement) g.crosses.add(h.croisement);
+                    if (d.status === 'done') {
+                        g.done++;
+                        if (d.decision === 'Eliminer') g.decisions.eliminer++;
+                        else if (d.decision === 'Poursuivre') g.decisions.poursuivre++;
+                        else if (d.decision === 'Sélectionner') g.decisions.selectionner++;
+                        else g.decisions.none++;
+
+                        const chargeVal = safeNumber(d.charge);
+                        if (chargeVal !== null) {
+                            g.chargeKnown++;
+                            g.chargeSum += chargeVal;
+                        }
+                        const fenteVal = safeNumber(d.fente);
+                        if (fenteVal !== null) {
+                            g.fenteKnown++;
+                            g.fenteSum += fenteVal;
+                        }
+                    }
+                });
+            });
+
+            return [...map.values()].map(g => {
+                g.crossCount = g.crosses.size;
+                g.selectionRate = g.done ? g.decisions.selectionner / g.done : 0;
+                g.usefulRate = g.done ? (g.decisions.selectionner + g.decisions.poursuivre) / g.done : 0;
+                g.score = g.done ? ((3 * g.decisions.selectionner + g.decisions.poursuivre - g.decisions.eliminer) / g.done) : -999;
+                return g;
+            }).sort((a, b) => {
+                return (b.usefulRate - a.usefulRate) ||
+                       (b.selectionRate - a.selectionRate) ||
+                       (b.done - a.done) ||
+                       a.name.localeCompare(b.name, 'fr', { numeric: true, sensitivity: 'base' });
+            });
+        }
+
+        function renderGenitorCard(g, index) {
+            const useful = g.decisions.selectionner + g.decisions.poursuivre;
+            return `
+                <div class="cross-stat-card genitor-rank-card">
+                    <div class="cross-stat-title">${index ? index + '. ' : ''}${escapeHtml(g.name)}</div>
+                    <div class="genitor-parent-role">Présent dans ${g.crossCount} croisement${g.crossCount > 1 ? 's' : ''}</div>
+                    <div class="cross-stat-metrics">
+                        <div class="metric-pill"><span>Évalués</span>${g.done} / ${g.total}</div>
+                        <div class="metric-pill genitor-score-pill"><span>Sélection + poursuite</span>${g.done ? percent(useful, g.done) : '—'}</div>
+                        <div class="metric-pill"><span>Sélection</span>${g.done ? percent(g.decisions.selectionner, g.done) : '—'}</div>
+                        <div class="metric-pill"><span>Poursuite</span>${g.done ? percent(g.decisions.poursuivre, g.done) : '—'}</div>
+                        <div class="metric-pill"><span>Élimination</span>${g.done ? percent(g.decisions.eliminer, g.done) : '—'}</div>
+                        <div class="metric-pill"><span>Score</span>${g.score === -999 ? '—' : g.score.toFixed(2).replace('.', ',')}</div>
+                        <div class="metric-pill"><span>Charge moy.</span>${mean(g.chargeSum, g.chargeKnown)} / 3</div>
+                        <div class="metric-pill"><span>Fente moy.</span>${mean(g.fenteSum, g.fenteKnown)} / 3</div>
+                    </div>
+                </div>
+            `;
+        }
+
         function updateStatsView() {
             const container = document.getElementById('stats-content');
             if (!container) return;
@@ -1712,6 +1863,10 @@
                 .filter(c => c.done > 0)
                 .sort((a, b) => (b.selectionRate - a.selectionRate) || (b.score - a.score) || (b.done - a.done))
                 .slice(0, 5);
+
+            const topGenitors = calculateGenitorStats()
+                .filter(g => g.done > 0)
+                .slice(0, 10);
 
             const watchCrosses = [...s.crossList]
                 .filter(c => c.done >= 5)
@@ -1757,6 +1912,11 @@
                         <div class="stat-label">Suivi terrain</div>
                         <div class="stat-sub">${s.tags} étiquettes à refaire · ${s.cuts} arbres coupés · ${s.photos} photos enregistrées</div>
                     </div>
+                </div>
+
+                <div class="card">
+                    <div class="stats-section-title"><h3>🧬 Bons géniteurs</h3><span class="stats-note">classés par Sélection + Poursuite</span></div>
+                    ${topGenitors.length ? topGenitors.map((g, i) => renderGenitorCard(g, i + 1)).join('') : '<div class="stats-empty">Aucun géniteur évalué détecté. Vérifie que les croisements contiennent bien “x”.</div>'}
                 </div>
 
                 <div class="card">
@@ -2666,6 +2826,7 @@ function returnToList() {
         }
 
         function renderList() {
+            sortHybrids(hybridesInitiaux);
             const listEl = document.getElementById('hybrids-list');
             listEl.innerHTML = '';
             listEl.classList.toggle('filter-all', !(dateFilter && dateFilter.mode) && (filterMode || 'all') === 'all');
