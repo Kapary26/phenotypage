@@ -1214,6 +1214,133 @@
             color: var(--success);
         }
 
+
+
+        /* ===== v37 - Gestion des croisements ===== */
+        .management-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .management-tab-btn {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 850;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+        }
+        .management-tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .management-panel { display: none; }
+        .management-panel.active { display: block; }
+        .cross-create-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 8px;
+            align-items: end;
+        }
+        .cross-x-separator {
+            align-self: center;
+            color: var(--text-muted);
+            font-size: 18px;
+            font-weight: 900;
+            padding-top: 28px;
+        }
+        .crossing-management-row {
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .crossing-row-title { font-weight: 850; color: var(--text-main); line-height: 1.25; }
+        .crossing-row-sub { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
+        .crossing-rename-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+        .crossing-rename-btn {
+            padding: 12px 13px;
+            font-size: 13px;
+            border-radius: 12px;
+            background: var(--primary);
+            white-space: nowrap;
+        }
+        .crossing-tip {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+        @media (max-width: 390px) {
+            .cross-create-row { grid-template-columns: 1fr; }
+            .cross-x-separator { padding-top: 0; text-align: center; }
+            .crossing-rename-row { grid-template-columns: 1fr; }
+        }
+
+
+
+        /* ===== v38 - Navigation Gestion séparée ===== */
+        #view-management .management-header .action-btn {
+            width: 62px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            border-radius: 15px !important;
+            font-size: 11px !important;
+            gap: 2px !important;
+            padding: 4px !important;
+        }
+        #view-management .management-header .action-btn .icon {
+            font-size: 18px !important;
+        }
+        #view-management .management-header h1 {
+            font-size: 21px !important;
+            line-height: 1.1 !important;
+        }
+        .management-home-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .management-big-btn {
+            background: var(--primary);
+            color: white;
+            min-height: 74px;
+            border-radius: 18px;
+            font-size: 17px;
+            font-weight: 850;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        }
+        .btn-management-subback {
+            background: var(--bg-card);
+            color: var(--primary);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 850;
+            margin: 0 0 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+        }
+        @media (prefers-color-scheme: dark) {
+            .management-big-btn { box-shadow: 0 4px 12px rgba(0,0,0,0.38); }
+            .btn-management-subback { background: #1c1c1e; border-color: #38383a; }
+        }
+
+
+        /* ===== v39 - Menu gestion direct et compact ===== */
+        .menu-management-card h3 { margin-bottom: 10px; }
+        .menu-management-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #management-panel-home { display: none !important; }
+        .btn-management-subback { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -1286,34 +1413,76 @@
     </div>
 
     <div id="view-management" class="view">
-        <header class="stats-header">
-            <button id="btn-management-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Accueil</span></button>
-            <h1>Gestion des arbres</h1>
+        <header class="stats-header management-header">
+            <button id="btn-management-back" type="button" class="action-btn btn-retour"><span class="icon">⬅</span><span>Liste</span></button>
+            <h1 id="management-title">Gestion</h1>
             <button id="btn-management-list" type="button" class="action-btn btn-stats"><span class="icon">📋</span><span>Liste</span></button>
         </header>
 
-        <div class="card">
-            <h3>➕ Ajouter un arbre</h3>
-            <label>Croisement :</label>
-            <input type="text" id="manage-add-cross" placeholder="Nom du croisement">
-            <div class="management-grid">
-                <div>
-                    <label>Rang :</label>
-                    <input type="number" id="manage-add-rang" inputmode="numeric" placeholder="NA">
-                </div>
-                <div>
-                    <label>Arbre :</label>
-                    <input type="number" id="manage-add-arbre" inputmode="numeric" placeholder="NA">
+        <div id="management-panel-home" class="management-panel active">
+            <div class="card">
+                <h3>⚙️ Gestion</h3>
+                <div class="management-home-grid">
+                    <button type="button" id="btn-management-go-trees" class="management-big-btn">🌳 Arbres</button>
+                    <button type="button" id="btn-management-go-crossings" class="management-big-btn">🧬 Croisements</button>
                 </div>
             </div>
-            <button id="btn-add-tree" type="button" class="btn-success btn-large management-action-btn">Ajouter l'arbre</button>
         </div>
 
-        <div class="card">
-            <h3>🗑️ Supprimer un arbre</h3>
-            <label>Rechercher :</label>
-            <input type="text" id="manage-delete-search" placeholder="Ex. R8A153, rang, arbre ou croisement">
-            <div id="manage-delete-results" class="management-results"></div>
+        <div id="management-panel-trees" class="management-panel">
+            <button type="button" class="btn-management-subback" data-management-section="home">⬅ Gestion</button>
+            <div class="card">
+                <h3>➕ Ajouter un arbre</h3>
+                <label>Croisement :</label>
+                <input type="text" id="manage-add-cross" list="crossing-options" placeholder="Taper ou rechercher un croisement">
+                <datalist id="crossing-options"></datalist>
+                <div class="crossing-tip">Tu peux sélectionner un croisement existant ou taper un nouveau nom manuellement.</div>
+                <div class="management-grid">
+                    <div>
+                        <label>Rang :</label>
+                        <input type="number" id="manage-add-rang" inputmode="numeric" placeholder="NA">
+                    </div>
+                    <div>
+                        <label>Arbre :</label>
+                        <input type="number" id="manage-add-arbre" inputmode="numeric" placeholder="NA">
+                    </div>
+                </div>
+                <button id="btn-add-tree" type="button" class="btn-success btn-large management-action-btn">Ajouter l'arbre</button>
+            </div>
+
+            <div class="card">
+                <h3>🗑️ Supprimer un arbre</h3>
+                <label>Rechercher :</label>
+                <input type="text" id="manage-delete-search" placeholder="Ex. R8A153, rang, arbre ou croisement">
+                <div id="manage-delete-results" class="management-results"></div>
+            </div>
+        </div>
+
+        <div id="management-panel-crossings" class="management-panel">
+            <button type="button" class="btn-management-subback" data-management-section="home">⬅ Gestion</button>
+            <div class="card">
+                <h3>➕ Créer un croisement</h3>
+                <div class="cross-create-row">
+                    <div>
+                        <label>Variété A :</label>
+                        <input type="text" id="cross-create-a" placeholder="Ex. 0621">
+                    </div>
+                    <div class="cross-x-separator">x</div>
+                    <div>
+                        <label>Variété B :</label>
+                        <input type="text" id="cross-create-b" placeholder="Ex. CAKECANDY">
+                    </div>
+                </div>
+                <button id="btn-create-crossing" type="button" class="btn-success btn-large management-action-btn">Créer le croisement</button>
+                <div class="crossing-tip">Le croisement sera enregistré au format : Variété A x Variété B.</div>
+            </div>
+
+            <div class="card">
+                <h3>✏️ Modifier un croisement</h3>
+                <label>Rechercher :</label>
+                <input type="text" id="manage-crossing-search" placeholder="Rechercher un croisement">
+                <div id="manage-crossing-results" class="management-results"></div>
+            </div>
         </div>
     </div>
 
@@ -1428,10 +1597,11 @@
                 </div>
                 <div id="menu-last-export-info" class="menu-info-line">📦 Dernier export : jamais</div>
             </div>
-            <div class="card">
-                <h3>🌳 Gestion</h3>
-                <div class="menu-grid">
+            <div class="card menu-management-card">
+                <h3>⚙️ Gestion</h3>
+                <div class="menu-grid menu-management-grid">
                     <button type="button" id="menu-manage-trees" class="btn-primary">🌳 Arbres</button>
+                    <button type="button" id="menu-manage-crossings" class="btn-primary">🧬 Croisements</button>
                     <button type="button" id="menu-home" class="btn-primary" style="display:none;">🏠 Accueil</button>
                 </div>
             </div>
@@ -1497,6 +1667,60 @@
         let lastLocalSaveAt = null;
         let lastExportAt = null;
         let dateFilter = { mode: null, start: '', end: '' };
+        let crossingCatalog = [];
+
+        function cleanCrossingPart(value) {
+            return String(value || '').trim().replace(/\s+/g, ' ');
+        }
+
+        function formatCrossingFromParents(parentA, parentB) {
+            const a = cleanCrossingPart(parentA);
+            const b = cleanCrossingPart(parentB);
+            if (!a || !b) return '';
+            return `${a} x ${b}`;
+        }
+
+        function normalizeCrossingName(value) {
+            return String(value || '')
+                .trim()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[×]/g, 'x')
+                .replace(/\s*[xX]\s*/g, ' x ')
+                .replace(/\s+/g, ' ')
+                .toLowerCase();
+        }
+
+        function getHybridCrossings() {
+            return hybridesInitiaux.map(h => h.croisement).filter(Boolean);
+        }
+
+        function getAllCrossings() {
+            const map = new Map();
+            [...(crossingCatalog || []), ...getHybridCrossings()].forEach(name => {
+                const cleaned = cleanCrossingPart(name);
+                if (!cleaned) return;
+                const key = normalizeCrossingName(cleaned);
+                if (!map.has(key)) map.set(key, cleaned);
+            });
+            return [...map.values()].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true, sensitivity: 'base' }));
+        }
+
+        function syncCrossingCatalogFromHybrids() {
+            crossingCatalog = getAllCrossings();
+            updateCrossingDatalist();
+        }
+
+        function updateCrossingDatalist() {
+            const datalist = document.getElementById('crossing-options');
+            if (!datalist) return;
+            datalist.innerHTML = getAllCrossings().map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+        }
+
+        function countTreesForCrossing(crossingName) {
+            const key = normalizeCrossingName(crossingName);
+            return hybridesInitiaux.filter(h => normalizeCrossingName(h.croisement) === key).length;
+        }
+
 
         function sortHybrids(hybrids) {
             const toOrderNumber = (value) => {
@@ -1549,6 +1773,7 @@
                 await localforage.setItem('hybridesList', hybridesInitiaux);
                 await localforage.setItem('phenotypeData', dataStore);
                 await localforage.setItem('photosData', photosStore);
+                await localforage.setItem('crossingCatalog', crossingCatalog);
                 await localforage.setItem('lastLocalSaveAt', lastLocalSaveAt);
                 updateHomeBackupInfo();
             } catch (err) {
@@ -2229,12 +2454,39 @@ function returnToList() {
             }
         }
 
-        function processExcelData(dataArray) {
+        
+        function mergeCrossingLists() {
+            const map = new Map();
+            Array.from(arguments).flat().forEach(name => {
+                const cleaned = cleanCrossingPart(name);
+                if (!cleaned) return;
+                const key = normalizeCrossingName(cleaned);
+                if (!map.has(key)) map.set(key, cleaned);
+            });
+            return [...map.values()].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true, sensitivity: 'base' }));
+        }
+
+        function readCrossingCatalogFromWorkbook(workbook) {
+            if (!workbook || !workbook.SheetNames || !workbook.SheetNames.includes('Croisements')) return [];
+            const ws = workbook.Sheets['Croisements'];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            const result = [];
+            rows.forEach((row, i) => {
+                if (!row || !row.length) return;
+                if (i === 0 && String(row[0] || '').toLowerCase().includes('croisement')) return;
+                const value = cleanCrossingPart(row[0]);
+                if (value) result.push(value);
+            });
+            return result;
+        }
+
+function processExcelData(dataArray) {
             try {
                 const workbook = XLSX.read(dataArray, {type: 'array'});
                 const sheetName = workbook.SheetNames.includes("Données complètes") ? "Données complètes" : workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                const importedCrossingCatalog = readCrossingCatalogFromWorkbook(workbook);
                 
                 let headerRowIndex = -1;
                 let cols = {};
@@ -2343,6 +2595,8 @@ function returnToList() {
                 sortHybrids(nouveauxHybrides);
                 hybridesInitiaux = nouveauxHybrides;
                 dataStore = newDataStore;
+                crossingCatalog = mergeCrossingLists(importedCrossingCatalog, getHybridCrossings());
+                updateCrossingDatalist();
                 
                 saveDataLocally().then(() => {
                     document.getElementById('btn-go-list').style.display = 'block';
@@ -2364,13 +2618,16 @@ function returnToList() {
                 localforage.getItem('phenotypeData'),
                 localforage.getItem('photosData'),
                 localforage.getItem('lastLocalSaveAt'),
-                localforage.getItem('lastExportAt')
-            ]).then(([hybrids, data, photos, savedAt, exportedAt]) => {
+                localforage.getItem('lastExportAt'),
+                localforage.getItem('crossingCatalog')
+            ]).then(([hybrids, data, photos, savedAt, exportedAt, catalog]) => {
                 hybridesInitiaux = hybrids || [];
                 dataStore = data || {};
                 photosStore = photos || {};
                 lastLocalSaveAt = savedAt || null;
                 lastExportAt = exportedAt || null;
+                crossingCatalog = Array.isArray(catalog) ? catalog : [];
+                syncCrossingCatalogFromHybrids();
                 updateHomeBackupInfo();
                 
                 if (hybridesInitiaux.length > 0) {
@@ -2401,7 +2658,7 @@ function returnToList() {
             });
 
             document.getElementById('btn-manage-trees').addEventListener('click', () => {
-                renderManagementList();
+                setManagementSection('home');
                 navigateTo('view-management');
             });
 
@@ -2438,9 +2695,17 @@ function returnToList() {
             }
             document.getElementById('menu-manage-trees').addEventListener('click', () => {
                 document.getElementById('menu-drawer').classList.remove('active');
-                renderManagementList();
+                setManagementSection('trees');
                 navigateTo('view-management');
             });
+            const menuManageCrossingsBtn = document.getElementById('menu-manage-crossings');
+            if (menuManageCrossingsBtn) {
+                menuManageCrossingsBtn.addEventListener('click', () => {
+                    document.getElementById('menu-drawer').classList.remove('active');
+                    setManagementSection('crossings');
+                    navigateTo('view-management');
+                });
+            }
             document.getElementById('menu-home').addEventListener('click', () => {
                 document.getElementById('menu-drawer').classList.remove('active');
                 navigateTo('view-list');
@@ -2517,6 +2782,14 @@ function returnToList() {
 
             document.getElementById('btn-add-tree').addEventListener('click', addTreeFromManagement);
             document.getElementById('manage-delete-search').addEventListener('input', renderManagementList);
+            const goTreesBtn = document.getElementById('btn-management-go-trees');
+            if (goTreesBtn) goTreesBtn.addEventListener('click', () => setManagementSection('trees'));
+            const goCrossingsBtn = document.getElementById('btn-management-go-crossings');
+            if (goCrossingsBtn) goCrossingsBtn.addEventListener('click', () => setManagementSection('crossings'));
+            document.querySelectorAll('.btn-management-subback').forEach(btn => btn.addEventListener('click', () => setManagementSection('home')));
+            document.getElementById('btn-create-crossing').addEventListener('click', createCrossingFromManagement);
+            document.getElementById('manage-crossing-search').addEventListener('input', renderCrossingManagementList);
+            document.getElementById('manage-add-cross').addEventListener('focus', updateCrossingDatalist);
 
             document.getElementById('btn-import').addEventListener('click', () => {
                 document.getElementById('file-import').click();
@@ -2761,6 +3034,7 @@ function returnToList() {
         function renderManagementList() {
             const container = document.getElementById('manage-delete-results');
             if (!container) return;
+            updateCrossingDatalist();
             const term = normalizeSearchText(document.getElementById('manage-delete-search').value || '');
             const matches = hybridesInitiaux.filter(h => {
                 const searchable = normalizeSearchText(`${h.croisement} Rang ${h.rang} Arbre ${h.arbre} R${h.rang}A${h.arbre} ${h.rang}-${h.arbre}`);
@@ -2774,7 +3048,7 @@ function returnToList() {
                 <div class="management-tree-row">
                     <div>
                         <div class="management-tree-title">Rang ${h.rang} - Arbre ${h.arbre}</div>
-                        <div class="management-tree-sub">${h.croisement}</div>
+                        <div class="management-tree-sub">${escapeHtml(h.croisement || '')}</div>
                     </div>
                     <button type="button" class="management-delete-btn" data-delete-id="${h.id}">Supprimer</button>
                 </div>
@@ -2784,8 +3058,123 @@ function returnToList() {
             });
         }
 
+        function setManagementSection(sectionName) {
+            const valid = ['home', 'trees', 'crossings'];
+            const section = valid.includes(sectionName) ? sectionName : 'home';
+            document.querySelectorAll('.management-panel').forEach(panel => panel.classList.remove('active'));
+            const target = document.getElementById(`management-panel-${section}`);
+            if (target) target.classList.add('active');
+            const title = document.getElementById('management-title');
+            if (title) {
+                title.textContent = section === 'trees' ? 'Arbres' : (section === 'crossings' ? 'Croisements' : 'Gestion');
+            }
+            if (section === 'trees') {
+                updateCrossingDatalist();
+                renderManagementList();
+            }
+            if (section === 'crossings') {
+                updateCrossingDatalist();
+                renderCrossingManagementList();
+            }
+        }
+
+        function setManagementTab(tabName) {
+            setManagementSection(tabName);
+        }
+
+        function renderCrossingManagementList() {
+            const container = document.getElementById('manage-crossing-results');
+            if (!container) return;
+            const term = normalizeSearchText(document.getElementById('manage-crossing-search') ? document.getElementById('manage-crossing-search').value : '');
+            const crossings = getAllCrossings().filter(c => !term || normalizeSearchText(c).includes(term));
+            if (!crossings.length) {
+                container.innerHTML = '<div class="stats-empty">Aucun croisement trouvé.</div>';
+                return;
+            }
+            container.innerHTML = crossings.map((c, index) => {
+                const count = countTreesForCrossing(c);
+                return `
+                    <div class="crossing-management-row">
+                        <div>
+                            <div class="crossing-row-title">${escapeHtml(c)}</div>
+                            <div class="crossing-row-sub">${count} arbre${count > 1 ? 's' : ''} associé${count > 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="crossing-rename-row">
+                            <input type="text" value="${escapeHtml(c)}" data-crossing-rename-input="${index}" aria-label="Nouveau nom du croisement">
+                            <button type="button" class="crossing-rename-btn" data-crossing-rename="${index}" data-old-crossing="${escapeHtml(c)}">Renommer</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.querySelectorAll('[data-crossing-rename]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const index = btn.dataset.crossingRename;
+                    const input = container.querySelector(`[data-crossing-rename-input="${index}"]`);
+                    renameCrossing(btn.dataset.oldCrossing, input ? input.value : '');
+                });
+            });
+        }
+
+        function createCrossingFromManagement() {
+            const parentA = document.getElementById('cross-create-a').value;
+            const parentB = document.getElementById('cross-create-b').value;
+            const crossing = formatCrossingFromParents(parentA, parentB);
+            if (!crossing) {
+                alert('Renseigne une variété A et une variété B.');
+                return;
+            }
+            const key = normalizeCrossingName(crossing);
+            if (getAllCrossings().some(c => normalizeCrossingName(c) === key)) {
+                alert(`Ce croisement existe déjà : ${crossing}`);
+                return;
+            }
+            crossingCatalog = mergeCrossingLists(crossingCatalog, [crossing]);
+            saveDataLocally().then(() => {
+                document.getElementById('cross-create-a').value = '';
+                document.getElementById('cross-create-b').value = '';
+                updateCrossingDatalist();
+                renderCrossingManagementList();
+                showToast('Croisement créé ✅');
+            });
+        }
+
+        function renameCrossing(oldName, newNameRaw) {
+            const cleanedOld = cleanCrossingPart(oldName);
+            const cleanedNew = cleanCrossingPart(newNameRaw);
+            if (!cleanedOld || !cleanedNew) {
+                alert('Le nouveau nom du croisement est vide.');
+                return;
+            }
+            const oldKey = normalizeCrossingName(cleanedOld);
+            const newKey = normalizeCrossingName(cleanedNew);
+            if (oldKey === newKey) {
+                showToast('Aucun changement');
+                return;
+            }
+            const duplicate = getAllCrossings().some(c => normalizeCrossingName(c) === newKey);
+            if (duplicate) {
+                alert(`Impossible : le croisement « ${cleanedNew} » existe déjà.`);
+                return;
+            }
+            const impacted = countTreesForCrossing(cleanedOld);
+            if (!confirm(`Renommer ce croisement modifiera ${impacted} arbre${impacted > 1 ? 's' : ''}.\n\n${cleanedOld}\n→ ${cleanedNew}\n\nConfirmer ?`)) return;
+            hybridesInitiaux.forEach(h => {
+                if (normalizeCrossingName(h.croisement) === oldKey) h.croisement = cleanedNew;
+            });
+            crossingCatalog = mergeCrossingLists(getAllCrossings().filter(c => normalizeCrossingName(c) !== oldKey), [cleanedNew]);
+            sortHybrids(hybridesInitiaux);
+            saveDataLocally().then(() => {
+                updateCrossingDatalist();
+                renderCrossingManagementList();
+                renderManagementList();
+                renderList();
+                if (document.getElementById('view-stats').classList.contains('active')) updateStatsView();
+                showToast('Croisement renommé ✅');
+            });
+        }
+
         function addTreeFromManagement() {
-            const croisement = document.getElementById('manage-add-cross').value.trim();
+            const croisement = cleanCrossingPart(document.getElementById('manage-add-cross').value);
             const rang = parseInt(document.getElementById('manage-add-rang').value, 10);
             const arbre = parseInt(document.getElementById('manage-add-arbre').value, 10);
             if (!croisement || !Number.isFinite(rang) || !Number.isFinite(arbre)) {
@@ -2798,6 +3187,7 @@ function returnToList() {
                 return;
             }
             hybridesInitiaux.push({ id, croisement, rang, arbre });
+            crossingCatalog = mergeCrossingLists(crossingCatalog, [croisement]);
             sortHybrids(hybridesInitiaux);
             saveDataLocally().then(() => {
                 document.getElementById('manage-add-cross').value = '';
@@ -2805,6 +3195,7 @@ function returnToList() {
                 document.getElementById('manage-add-arbre').value = '';
                 document.getElementById('btn-go-list').style.display = 'block';
                 document.getElementById('btn-manage-trees').style.display = 'block';
+                updateCrossingDatalist();
                 renderManagementList();
                 renderList();
                 showToast('Arbre ajouté ✅');
@@ -2818,8 +3209,10 @@ function returnToList() {
             hybridesInitiaux = hybridesInitiaux.filter(x => x.id !== id);
             delete dataStore[id];
             delete photosStore[id];
+            syncCrossingCatalogFromHybrids();
             saveDataLocally().then(() => {
                 renderManagementList();
+                renderCrossingManagementList();
                 renderList();
                 showToast('Arbre supprimé ✅');
             });
@@ -3287,6 +3680,8 @@ ${warnings.length ? 'Points à vérifier :\n- ' + warnings.join('\n- ') + '\n\n'
             const worksheet = XLSX.utils.json_to_sheet(excelData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Données complètes");
+            const crossingWorksheet = XLSX.utils.json_to_sheet(getAllCrossings().map(c => ({ Croisement: c, Arbres: countTreesForCrossing(c) })));
+            XLSX.utils.book_append_sheet(workbook, crossingWorksheet, "Croisements");
             const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
             zip.file("Notations_Plate.xlsx", excelBuffer);
 
